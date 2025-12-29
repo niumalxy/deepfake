@@ -37,3 +37,6 @@ uv sync
         database: "deepfake"
     ```
 - 其他配置项
+
+### Agent流程图
+    ![Agent流程图](agent_flow.png)

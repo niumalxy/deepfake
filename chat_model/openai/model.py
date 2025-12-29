@@ -8,13 +8,12 @@ class ChatModel:
         openai.api_base = model_conf["api_base"]
         self.model_name = model_conf["model_name"]
         self.chat_model = openai.ChatCompletion
+        self.max_tokens = model_conf["max_tokens"]
 
     def generate(self, messages: list) -> str:
         response = openai.ChatCompletion.create(
             model=self.model_name,
             messages=messages,
-            max_tokens=1024,
-            presence_penalty=0.0,
-            frequency_penalty=0.0,
+            max_tokens=self.max_tokens,
         )
         return response.choices[0].message.content
