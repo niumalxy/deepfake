@@ -3,9 +3,9 @@
 
 ### Quick Start
 #### 安装uv
+```bash
 pip install uv
-mac: brew install uv
-
+```
 #### 安装依赖
 ```bash
 uv venv
