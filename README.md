@@ -12,3 +12,28 @@ uv venv
 source .venv/bin/activate
 uv sync
 ```
+
+#### conf
+#####需要增加的配置项
+- openai api key
+    路径： chat_model/conf/conf.yaml
+    格式：
+    ```yaml
+    qwen-vl:
+        api_key: "sk-xxxx"
+        api_base: "https://api.openai.com/v1"
+        model: "qwen-vl"
+        max_tokens: 2048
+    ```
+- db config
+    路径： db/conf/conf.yaml
+    格式：
+    ```yaml
+    db:
+        host: "localhost"
+        port: 3306
+        user: "root"
+        password: "123456"
+        database: "deepfake"
+    ```
+- 其他配置项
