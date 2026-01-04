@@ -11,3 +11,5 @@ wheels/
 
 # 配置文件不提交
 conf.yml
+
+**/log/*

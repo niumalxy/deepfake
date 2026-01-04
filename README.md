@@ -14,7 +14,7 @@ uv sync
 ```
 
 #### conf
-#####需要增加的配置项
+需要增加的配置项
 - openai api key
     路径： chat_model/conf/conf.yaml
     格式：
@@ -40,3 +40,13 @@ uv sync
 
 ### Agent流程图
     ![Agent流程图](agent_flow.png)
+
+
+### 项目规范
+#### log
+传入上下文变量用例：
+```python
+ctx = {"log_id": "test"}
+set_context(ctx)
+logs.info("Message with dict context")
+```
