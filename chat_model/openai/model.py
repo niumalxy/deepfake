@@ -1,4 +1,3 @@
-import openai
 import json
 from openai import OpenAI
 from typing import List, Optional, Any, Union
