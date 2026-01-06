@@ -22,7 +22,6 @@ def run_test():
     
     inputs = {
         "user_input": "Test request to analyze image.",
-        "image": "d:/yan/毕设/deepfake/test_image.jpg", # Placeholder path
         "messages": [HumanMessage(content="Start analysis")]
     }
 

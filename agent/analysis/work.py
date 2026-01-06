@@ -8,6 +8,7 @@ from logger import logs
 from agent.analysis.prompt.system_prompt import *
 from agent.analysis.prompt.user_prompt import *
 from entity.agent_status import AgentStatus
+import re, json
 
 def generate_tasks(state: AgentState, config: AgentConfiguration):
     """
@@ -19,16 +20,20 @@ def generate_tasks(state: AgentState, config: AgentConfiguration):
         plan = f.read()
     messages = [SystemMessage(content=get_task_prompt()), HumanMessage(content=get_tasks_user_prompt(plan))]
     response = model.invoke(messages)
+
+    # 先匹配json
+    matches = re.search(r"\[.*\]", response.content, re.DOTALL)
+    if matches:
+        plan_str = matches.group()
+    else:
+        raise Exception("No json found in response")
     # 清除空字符串
-    origin_plan = response.content.split('\n')
-    plan = []
-    for item in origin_plan:
-        if item.strip():
-            plan.append(item.strip())
-    logs.info(f"Plan: {plan}")
+    tasks = json.loads(plan_str)
+    logs.info(f"Plan: {tasks}")
+
     return {
         "status": AgentStatus.ANALYZING,
-        "tasks": plan,
+        "tasks": tasks,
         "current_task": 0,
     }
 

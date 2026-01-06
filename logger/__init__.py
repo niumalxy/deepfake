@@ -44,7 +44,7 @@ if not os.path.exists("log"):
     os.makedirs("log")
 
 # 创建文件处理器
-file_handler = logging.FileHandler(log_file_path)
+file_handler = logging.FileHandler(log_file_path, encoding='utf-8')
 file_handler.setLevel(logging.INFO)
 file_handler.setFormatter(formatter)
 file_handler.addFilter(context_filter)
