@@ -1,5 +1,6 @@
 USER_PROMPT = """
-我的要求如下：{user_requirement}
+My Extra Requirements is following, you can pay attention to them but not strictly follow them:
+{user_requirement}
 """
 
 def get_user_prompt(user_requirement: str) -> str:
