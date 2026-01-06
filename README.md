@@ -8,13 +8,20 @@ pip install uv
 ```
 #### 安装依赖
 ```bash
-uv venv
-source .venv/bin/activate
 uv sync
+source .venv/bin/activate
+```
+
+windows:
+```bash
+uv sync
+.venv\Scripts\activate
 ```
 
 #### conf
 需要增加的配置项
+百炼控制台：https://help.aliyun.com/zh/model-studio/models?spm=a2c4g.11186623.0.0.f4d25e66fkEE4v#94b18818a6ywy
+
 - openai api key
     路径： chat_model/conf/conf.yaml
     格式：

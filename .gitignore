@@ -13,3 +13,5 @@ wheels/
 conf.yml
 
 **/log/*
+
+**/docs/*

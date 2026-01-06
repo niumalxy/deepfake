@@ -2,7 +2,7 @@ import logging
 import os
 import contextvars
 import contextlib
-
+from datetime import datetime
 
 logs = logging.getLogger(__name__)
 logs.setLevel(logging.INFO)
@@ -39,7 +39,7 @@ console_handler.addFilter(context_filter)
 logs.addHandler(console_handler)
 
 # 保存路径
-log_file_path = "log/deepfake.log"
+log_file_path = f"log/{datetime.now().strftime('%Y-%m-%d-%H-%M-%S')}.log"
 if not os.path.exists("log"):
     os.makedirs("log")
 

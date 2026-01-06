@@ -3,7 +3,7 @@ from logger import context_var
 from utils.idgen import generate_id
 
 def init(app):
-    class TaskIdMiddleware(BaseHTTPMiddleware):
+    class LogIdMiddleware(BaseHTTPMiddleware):
         async def dispatch(self, request, call_next):
             # 先判断请求是否包含log_id
             if "log_id" in request.query_params:
@@ -16,4 +16,4 @@ def init(app):
                 return response
             finally:
                 context_var.reset(token)
-    app.add_middleware(TaskIdMiddleware)
+    app.add_middleware(LogIdMiddleware)

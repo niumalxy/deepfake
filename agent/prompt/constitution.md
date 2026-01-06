@@ -48,3 +48,5 @@ Please provide your analysis in the following structured format:
     *   [List the strongest evidence supporting your verdict]
 4.  **Detailed Analysis**:
     *   [Provide a breakdown of your reasoning based on the constitution points above]
+    
+**IMPORTANT**: If you are certain that you have the current conclusion and complete this task, you should write "<complete>" at the end of your response.
