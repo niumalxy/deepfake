@@ -3,6 +3,8 @@ from fastapi.templating import Jinja2Templates
 import utils.idgen as idgen
 from logger import logs
 from init import init
+from db.local_map import status_map
+from entity.agent_status import AgentStatus
 
 app = FastAPI()
 
@@ -36,6 +38,8 @@ async def analyze_task(file: UploadFile = File(...)):
     task_id = idgen.generate_id()
     logs.info(f"Received task {task_id}, starting analysis...")
 
+    status_map[task_id] = AgentStatus.WAITING
+
     def _run_agent():
         graph = create_graph(task_id=task_id, img=img_base64)
         inputs = {
@@ -62,7 +66,9 @@ async def analyze_task(file: UploadFile = File(...)):
         logs.error(f"Task {task_id} failed: {str(e)}")
         return {"code": 500, "msg": str(e)}
 
-
+@app.get("/api/status/{task_id}")
+def get_task_status(task_id: str):
+    return {"status": status_map.get(task_id, AgentStatus.WAITING)}
 
 if __name__ == "__main__":
     import uvicorn

@@ -5,11 +5,13 @@ from logger import logs
 from agent.img_content.prompt.analyze_content import *
 from chat_model.openai.langchain_model import model
 from entity.agent_status import AgentStatus
+from db.local_map import status_map
 
 def extract_img_content(state: AgentState, config: AgentConfiguration) -> str:
     logs.info("--- Extracting Image Content ---")
     state.update({"status": AgentStatus.ANALYZING})
-    
+    status_map[config.get('task_id', '')] = AgentStatus.ANALYZING
+
     content = [{
         "type": "image_url",
         "image_url": {

@@ -9,6 +9,7 @@ from agent.analysis.prompt.system_prompt import *
 from agent.analysis.prompt.user_prompt import *
 from entity.agent_status import AgentStatus
 import re, json
+from db.local_map import status_map
 
 def generate_tasks(state: AgentState, config: AgentConfiguration):
     """
@@ -30,7 +31,7 @@ def generate_tasks(state: AgentState, config: AgentConfiguration):
     # 清除空字符串
     tasks = json.loads(plan_str)
     logs.info(f"Plan: {tasks}")
-
+    status_map[config.get('task_id', '')] = AgentStatus.ANALYZING
     return {
         "status": AgentStatus.ANALYZING,
         "tasks": tasks,

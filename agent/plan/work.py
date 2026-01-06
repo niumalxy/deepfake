@@ -5,10 +5,12 @@ from logger import logs
 from chat_model.openai.langchain_model import model
 import agent.plan.prompt.plan_prompt as prompts
 from entity.agent_status import AgentStatus
+from db.local_map import status_map
 
 def plan(state: AgentState, config: AgentConfiguration):
     logs.info("--- Planning Tasks ---")
     state.update({"status": AgentStatus.PLANNING})
+    status_map[config.get('task_id', '')] = AgentStatus.PLANNING
     # Get the image content analysis from the state
     content_analysis = state.get("content", "")
     content = []

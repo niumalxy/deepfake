@@ -6,13 +6,15 @@ from logger import logs
 from agent.summary.prompt.system_prompt import get_summary_system_prompt
 from entity.agent_status import AgentStatus
 import os
+from db.local_map import status_map
 
 def summarize(state: AgentState, config: AgentConfiguration):
     """
     Summarize the analysis results into a markdown report.
     """
     logs.info("--- Summarizing Results ---")
-    
+    status_map[config.get('task_id', '')] = AgentStatus.REPORTING
+
     # Extract analysis messages
     analysis_messages = state.get("analysis_messages", [])
     if not analysis_messages:
@@ -48,7 +50,7 @@ def summarize(state: AgentState, config: AgentConfiguration):
         f.write(report_content)
     
     logs.info(f"Report saved to {file_path}")
-
+    status_map[config.get('task_id', '')] = AgentStatus.COMPLETED
     return {
         "status": AgentStatus.COMPLETED,
         "report_messages": [response] # Optional: store report in state
