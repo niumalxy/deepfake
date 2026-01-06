@@ -10,6 +10,7 @@ This is the image content analyst's analysis of the image content, structured da
 Your job is to check the given image contents and create a task list to complete the detection. Each task should be small, highly testable, and designed for a large language model to complete. Ensure the foundational tasks are defined first so that the following tasks can leverage them. Provide the task list in markdown format.
 """
 
+
 """
 逐一执行task时传入constitution，规范detection过程
 """
