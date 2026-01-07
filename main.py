@@ -26,7 +26,7 @@ def read_root():
     return {"code": "200", "msg": "success"}
 
 @app.post("/api/task")
-async def analyze_task(file: UploadFile = File(...)):
+async def analyze_task(file: UploadFile = File(...), use_chinese: bool = False):
     import base64
     import uuid
     from agent.graph import create_graph
@@ -43,7 +43,7 @@ async def analyze_task(file: UploadFile = File(...)):
     status_map[task_id] = AgentStatus.WAITING
 
     def _run_agent():
-        graph = create_graph(task_id=task_id, img=img_base64)
+        graph = create_graph(task_id=task_id, img=img_base64, use_chinese=use_chinese)
         inputs = {
             "messages": [HumanMessage(content="Start analysis")]
         }
@@ -73,7 +73,7 @@ def get_task_status(task_id: str):
     return {"status": status_map.get(task_id, AgentStatus.WAITING)}
 
 @app.post("/api/task/stream")
-async def analyze_task_stream(file: UploadFile = File(...)):
+async def analyze_task_stream(file: UploadFile = File(...), use_chinese: bool = False):
     import base64
     from agent.graph import create_graph
     from langchain_core.messages import HumanMessage
@@ -88,7 +88,7 @@ async def analyze_task_stream(file: UploadFile = File(...)):
 
     def stream_generator():
         # try:
-            graph = create_graph(task_id=task_id, img=img_base64)
+            graph = create_graph(task_id=task_id, img=img_base64, use_chinese=use_chinese)
             inputs = {
                 "messages": [HumanMessage(content="Start analysis")]
             }
@@ -114,7 +114,15 @@ async def analyze_task_stream(file: UploadFile = File(...)):
                         if msgs:
                             message = msgs[-1].content
                     
-                    yield json.dumps({"status": status, "message": message}, ensure_ascii=False) + "\n"
+                    total_tasks = len(state.get("tasks", []))
+                    current_task = state.get("current_task", 0)
+                    
+                    yield json.dumps({
+                        "status": status, 
+                        "message": message,
+                        "current_task": current_task,
+                        "total_tasks": total_tasks
+                    }, ensure_ascii=False) + "\n"
             
             yield json.dumps({"status": "finished", "message": "Analysis complete"}, ensure_ascii=False) + "\n"
             

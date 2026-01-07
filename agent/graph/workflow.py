@@ -16,8 +16,8 @@ def analysis_next_node(state: AgentState):
     return "continue"
 
 
-def create_graph(task_id: str, img: str = ""):
-    config = AgentConfiguration(task_id=task_id, origin_img=img)
+def create_graph(task_id: str, img: str = "", use_chinese: bool = False):
+    config = AgentConfiguration(task_id=task_id, origin_img=img, use_chinese=use_chinese)
     workflow = StateGraph(AgentState)
     
     # Add nodes

@@ -1,23 +1,25 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Deepfake Agent Demo</title>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
-        
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             padding: 20px;
         }
-        
+
         .container {
             max-width: 1000px;
             margin: 0 auto;
@@ -26,21 +28,21 @@
             padding: 30px;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
         }
-        
+
         h1 {
             text-align: center;
             color: #333;
             margin-bottom: 10px;
             font-size: 2.5em;
         }
-        
+
         .subtitle {
             text-align: center;
             color: #666;
             margin-bottom: 30px;
             font-size: 1.1em;
         }
-        
+
         .upload-section {
             background: #f8f9fa;
             border: 2px dashed #ddd;
@@ -50,22 +52,22 @@
             margin-bottom: 30px;
             transition: all 0.3s ease;
         }
-        
+
         .upload-section:hover {
             border-color: #667eea;
             background: #f0f2ff;
         }
-        
+
         .upload-section.dragover {
             border-color: #667eea;
             background: #e8ecff;
             transform: scale(1.02);
         }
-        
+
         #file-input {
             display: none;
         }
-        
+
         .upload-btn {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
@@ -77,32 +79,32 @@
             transition: all 0.3s ease;
             margin: 10px;
         }
-        
+
         .upload-btn:hover {
             transform: translateY(-2px);
             box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
         }
-        
+
         .upload-btn:active {
             transform: translateY(0);
         }
-        
+
         .upload-btn:disabled {
             opacity: 0.6;
             cursor: not-allowed;
             transform: none;
         }
-        
+
         #file-name {
             margin: 15px 0;
             font-weight: 500;
             color: #333;
         }
-        
+
         .process-section {
             margin-bottom: 30px;
         }
-        
+
         .section-title {
             font-size: 1.5em;
             color: #333;
@@ -111,104 +113,168 @@
             align-items: center;
             gap: 10px;
         }
-        
+
         .status-indicator {
             width: 12px;
             height: 12px;
             border-radius: 50%;
             background: #ddd;
         }
-        
+
         .status-indicator.running {
             background: #4ade80;
             animation: pulse 1.5s infinite;
         }
-        
+
         .status-indicator.completed {
             background: #667eea;
         }
-        
+
         .status-indicator.error {
             background: #ef4444;
         }
-        
+
         @keyframes pulse {
-            0%, 100% {
+
+            0%,
+            100% {
                 opacity: 1;
             }
+
             50% {
                 opacity: 0.5;
             }
         }
-        
+
         #process-log {
-            background: #f8f9fa;
+            background: #fff;
             border-radius: 8px;
             padding: 20px;
-            height: 300px;
+            height: 500px;
             overflow-y: auto;
-            font-family: 'Courier New', monospace;
-            font-size: 14px;
-            line-height: 1.6;
             border: 1px solid #e9ecef;
         }
-        
-        .log-entry {
+
+        /* New Styles for Collapsible Logs */
+        details {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
             margin-bottom: 10px;
-            padding: 8px 12px;
-            border-radius: 6px;
-            animation: slideIn 0.3s ease;
+            overflow: hidden;
+            transition: all 0.2s;
         }
-        
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+
+        details[open] {
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            border-color: #d1d5db;
         }
-        
-        .log-entry.waiting {
-            background: #fef3c7;
-            border-left: 4px solid #f59e0b;
-        }
-        
-        .log-entry.running {
-            background: #d1fae5;
-            border-left: 4px solid #10b981;
-        }
-        
-        .log-entry.completed {
-            background: #dbeafe;
-            border-left: 4px solid #3b82f6;
-        }
-        
-        .log-entry.error {
-            background: #fee2e2;
-            border-left: 4px solid #ef4444;
-        }
-        
-        .log-time {
-            color: #666;
-            font-size: 12px;
-            margin-right: 10px;
-        }
-        
-        .log-status {
+
+        summary {
+            padding: 12px 15px;
+            cursor: pointer;
             font-weight: 600;
-            margin-right: 10px;
+            background: #fff;
+            user-select: none;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            color: #374151;
+            list-style: none;
+            /* Hide default arrow */
         }
-        
+
+        summary::-webkit-details-marker {
+            display: none;
+        }
+
+        summary:hover {
+            background: #f9fafb;
+        }
+
+        summary:after {
+            content: '+';
+            font-size: 1.2em;
+            color: #9ca3af;
+            font-weight: normal;
+        }
+
+        details[open] summary:after {
+            content: '-';
+        }
+
+        .details-content {
+            padding: 15px;
+            border-top: 1px solid #e9ecef;
+            background: #fff;
+            overflow-x: auto;
+        }
+
+        /* Markdown Content Styles */
+        .markdown-body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+            font-size: 14px;
+            line-height: 1.6;
+            color: #24292f;
+        }
+
+        .markdown-body h1,
+        .markdown-body h2,
+        .markdown-body h3 {
+            margin-top: 24px;
+            margin-bottom: 16px;
+            font-weight: 600;
+            line-height: 1.25;
+        }
+
+        .markdown-body p {
+            margin-bottom: 16px;
+        }
+
+        .markdown-body code {
+            padding: 0.2em 0.4em;
+            margin: 0;
+            font-size: 85%;
+            background-color: rgba(175, 184, 193, 0.2);
+            border-radius: 6px;
+            font-family: ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, Liberation Mono, monospace;
+        }
+
+        .markdown-body pre {
+            padding: 16px;
+            overflow: auto;
+            font-size: 85%;
+            line-height: 1.45;
+            background-color: #f6f8fa;
+            border-radius: 6px;
+            margin-bottom: 16px;
+        }
+
+        .markdown-body pre code {
+            background-color: transparent;
+            padding: 0;
+        }
+
+        .markdown-body ul,
+        .markdown-body ol {
+            padding-left: 2em;
+            margin-bottom: 16px;
+        }
+
+        .markdown-body blockquote {
+            padding: 0 1em;
+            color: #656d76;
+            border-left: 0.25em solid #d0d7de;
+            margin: 0 0 16px 0;
+        }
+
         .report-section {
             background: #f8f9fa;
             border-radius: 12px;
             padding: 25px;
             border: 1px solid #e9ecef;
         }
-        
+
         #report-content {
             margin-top: 15px;
             background: white;
@@ -219,13 +285,13 @@
             min-height: 200px;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
         }
-        
+
         .report-content.empty {
             color: #999;
             text-align: center;
             padding: 60px 20px;
         }
-        
+
         .copy-btn {
             background: #10b981;
             color: white;
@@ -237,16 +303,16 @@
             margin-top: 15px;
             transition: all 0.3s ease;
         }
-        
+
         .copy-btn:hover {
             background: #059669;
             transform: translateY(-1px);
         }
-        
+
         .copy-btn:active {
             transform: translateY(0);
         }
-        
+
         .copy-notification {
             background: #10b981;
             color: white;
@@ -259,54 +325,55 @@
             opacity: 0;
             transition: opacity 0.3s ease;
         }
-        
+
         .copy-notification.show {
             opacity: 1;
         }
-        
+
         /* 滚动条样式 */
         #process-log::-webkit-scrollbar {
             width: 8px;
         }
-        
+
         #process-log::-webkit-scrollbar-track {
             background: #f1f1f1;
             border-radius: 4px;
         }
-        
+
         #process-log::-webkit-scrollbar-thumb {
             background: #c1c1c1;
             border-radius: 4px;
         }
-        
+
         #process-log::-webkit-scrollbar-thumb:hover {
             background: #a1a1a1;
         }
-        
+
         @media (max-width: 768px) {
             .container {
                 padding: 20px;
             }
-            
+
             h1 {
                 font-size: 2em;
             }
-            
+
             .upload-section {
                 padding: 20px;
             }
-            
+
             #process-log {
-                height: 200px;
+                height: 300px;
             }
         }
     </style>
 </head>
+
 <body>
     <div class="container">
         <h1>Deepfake Agent Demo</h1>
         <p class="subtitle">上传图片进行深度伪造分析，实时查看分析流程</p>
-        
+
         <!-- 上传区域 -->
         <div class="upload-section" id="upload-section">
             <input type="file" id="file-input" accept="image/*">
@@ -314,9 +381,15 @@
             <p>支持 JPG、PNG、WEBP 等格式</p>
             <button class="upload-btn" onclick="document.getElementById('file-input').click()">选择图片</button>
             <div id="file-name"></div>
+            <div style="margin: 10px 0;">
+                <label style="display: inline-flex; align-items: center; cursor: pointer;">
+                    <input type="checkbox" id="use-chinese" style="margin-right: 8px; width: 16px; height: 16px;">
+                    <span style="color: #666;">生成中文报告</span>
+                </label>
+            </div>
             <button class="upload-btn" id="upload-btn" disabled>开始分析</button>
         </div>
-        
+
         <!-- 任务流程区域 -->
         <div class="process-section">
             <h2 class="section-title">
@@ -325,7 +398,7 @@
             </h2>
             <div id="process-log"></div>
         </div>
-        
+
         <!-- 报告区域 -->
         <div class="report-section">
             <h2 class="section-title">分析报告</h2>
@@ -335,49 +408,49 @@
             <button class="copy-btn" id="copy-btn" onclick="copyReport()" style="display: none;">复制报告</button>
         </div>
     </div>
-    
+
     <!-- 复制成功通知 -->
     <div class="copy-notification" id="copy-notification">
         报告已复制到剪贴板
     </div>
-    
+
     <script>
         // 全局变量
         let selectedFile = null;
         let isUploading = false;
-        
+
         // 初始化事件监听
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             const fileInput = document.getElementById('file-input');
             const uploadBtn = document.getElementById('upload-btn');
             const uploadSection = document.getElementById('upload-section');
-            
+
             // 文件选择事件
-            fileInput.addEventListener('change', function(e) {
+            fileInput.addEventListener('change', function (e) {
                 if (e.target.files.length > 0) {
                     selectedFile = e.target.files[0];
                     document.getElementById('file-name').textContent = `已选择: ${selectedFile.name}`;
                     uploadBtn.disabled = false;
                 }
             });
-            
+
             // 上传按钮点击事件
             uploadBtn.addEventListener('click', uploadFile);
-            
+
             // 拖拽事件处理
-            uploadSection.addEventListener('dragover', function(e) {
+            uploadSection.addEventListener('dragover', function (e) {
                 e.preventDefault();
                 this.classList.add('dragover');
             });
-            
-            uploadSection.addEventListener('dragleave', function() {
+
+            uploadSection.addEventListener('dragleave', function () {
                 this.classList.remove('dragover');
             });
-            
-            uploadSection.addEventListener('drop', function(e) {
+
+            uploadSection.addEventListener('drop', function (e) {
                 e.preventDefault();
                 this.classList.remove('dragover');
-                
+
                 if (e.dataTransfer.files.length > 0) {
                     selectedFile = e.dataTransfer.files[0];
                     document.getElementById('file-name').textContent = `已选择: ${selectedFile.name}`;
@@ -385,59 +458,71 @@
                 }
             });
         });
-        
+
         // 上传文件
         async function uploadFile() {
             if (!selectedFile || isUploading) return;
-            
+
             isUploading = true;
             const uploadBtn = document.getElementById('upload-btn');
             const overallStatus = document.getElementById('overall-status');
-            
+
             // 更新UI状态
             uploadBtn.disabled = true;
             uploadBtn.textContent = '分析中...';
             overallStatus.className = 'status-indicator running';
-            
+
             // 清空之前的日志和报告
             document.getElementById('process-log').innerHTML = '';
             document.getElementById('report-content').innerHTML = '分析中，请稍候...';
             document.getElementById('report-content').className = '';
             document.getElementById('copy-btn').style.display = 'none';
-            
+
             // 添加开始日志
-            addLogEntry('info', '开始分析图片...');
-            
+            processLogEntry('系统消息', '开始分析图片...', 'info');
+
             try {
                 // 创建FormData
                 const formData = new FormData();
                 formData.append('file', selectedFile);
-                
+
+                // Add language option
+                const useChinese = document.getElementById('use-chinese').checked;
+                // Append as query param or form data? FastAPI expects query param if typed as bool in method signature usually, 
+                // but `Form(...)` would be needed for form data. 
+                // Let's check main.py signature: `use_chinese: bool = False` along with `File`. 
+                // FastAPI treats simple types mixed with File/Form as query params by default unless Form is used.
+                // Re-checking main.py: `async def analyze_task_stream(file: UploadFile = File(...), use_chinese: bool = False):`
+                // This means use_chinese is expected as a QUERY PARAMETER.
+
                 // 发送请求
-                const response = await fetch('/api/task/stream', {
+                const url = new URL('/api/task/stream', window.location.href);
+                url.searchParams.append('use_chinese', useChinese);
+
+                const response = await fetch(url.toString(), {
                     method: 'POST',
                     body: formData
                 });
-                
+
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
-                
+
                 // 处理流式响应
                 const reader = response.body.getReader();
                 const decoder = new TextDecoder('utf-8');
                 let buffer = '';
-                
+
                 while (true) {
                     const { done, value } = await reader.read();
                     if (done) break;
-                    
+
                     buffer += decoder.decode(value, { stream: true });
-                    
+
                     // 处理每一行JSON
                     const lines = buffer.split('\n');
                     buffer = lines.pop(); // 保留不完整的行
-                    
+
                     for (const line of lines) {
                         if (line.trim()) {
                             const data = JSON.parse(line);
@@ -445,15 +530,15 @@
                         }
                     }
                 }
-                
+
                 // 处理最后一行
                 if (buffer.trim()) {
                     const data = JSON.parse(buffer);
                     processStreamData(data);
                 }
-                
+
             } catch (error) {
-                addLogEntry('error', `分析失败: ${error.message}`);
+                processLogEntry('分析失败', error.message, 'error');
                 document.getElementById('report-content').innerHTML = `分析失败: ${error.message}`;
                 overallStatus.className = 'status-indicator error';
             } finally {
@@ -461,83 +546,130 @@
                 uploadBtn.textContent = '开始分析';
             }
         }
-        
+
         // 处理流式数据
         function processStreamData(data) {
-            const { status, message } = data;
-            
+            const { status, message, current_task, total_tasks } = data;
+
+            // Auto collapse previous details when a new distinct status comes
+            // But we might want to keep the immediate previous one open if it's related?
+            // "When a node ends, it should support collapsing"
+            // Let's just collapse all previous ones to focus on the new one.
+            const allDetails = document.querySelectorAll('#process-log details[open]');
+            allDetails.forEach(detail => detail.removeAttribute('open'));
+
+            // Render markdown content
+            let renderedMessage = message;
+            try {
+                // Ensure message is string
+                if (typeof message === 'object') {
+                    renderedMessage = JSON.stringify(message, null, 2);
+                    renderedMessage = '```json\n' + renderedMessage + '\n```';
+                }
+                renderedMessage = marked.parse(renderedMessage || '');
+            } catch (e) {
+                console.error("Markdown parsing failed", e);
+            }
+
+            let title = '';
+            let type = 'running';
+
             switch (status) {
                 case 'img_content':
-                    addLogEntry('running', '正在提取图片内容...');
+                    title = '图片内容提取';
+                    processLogEntry(title, renderedMessage, 'completed');
                     break;
                 case 'plan':
-                    addLogEntry('running', `正在生成分析计划: ${message}`);
+                    title = '分析计划';
+                    processLogEntry(title, renderedMessage, 'completed');
                     break;
                 case 'tasks':
-                    addLogEntry('running', message);
+                    title = '生成任务列表';
+                    processLogEntry(title, renderedMessage, 'completed');
                     break;
                 case 'analysis':
-                    addLogEntry('running', `正在分析: ${message}`);
+                    title = `执行分析 (任务 ${current_task}/${total_tasks})`;
+                    processLogEntry(title, renderedMessage, 'running');
                     break;
                 case 'summary':
-                    addLogEntry('completed', '分析完成，正在生成报告...');
-                    document.getElementById('report-content').innerHTML = message;
-                    document.getElementById('copy-btn').style.display = 'inline-block';
-                    document.getElementById('overall-status').className = 'status-indicator completed';
+                    title = '生成分析报告';
+                    processLogEntry(title, renderedMessage, 'completed');
+                    if (document.getElementById('report-content')) {
+                        document.getElementById('report-content').innerHTML = renderedMessage;
+                        document.getElementById('report-content').className = 'markdown-body'; // Apply markdown styles
+                        document.getElementById('copy-btn').style.display = 'inline-block';
+                    }
+                    if (document.getElementById('overall-status')) {
+                        document.getElementById('overall-status').className = 'status-indicator completed';
+                    }
                     break;
                 case 'finished':
-                    addLogEntry('completed', message);
+                    addSimpleLog(message);
                     break;
                 case 'error':
-                    addLogEntry('error', message);
-                    document.getElementById('overall-status').className = 'status-indicator error';
+                    title = '发生错误';
+                    processLogEntry(title, renderedMessage, 'error');
+                    if (document.getElementById('overall-status')) {
+                        document.getElementById('overall-status').className = 'status-indicator error';
+                    }
                     break;
                 default:
-                    addLogEntry('running', `${status}: ${message}`);
+                    title = `${status}`;
+                    processLogEntry(title, renderedMessage, 'running');
             }
         }
-        
-        // 添加日志条目
-        function addLogEntry(type, message) {
+
+        // Add collapsible log entry
+        function processLogEntry(title, content, type) {
             const logContainer = document.getElementById('process-log');
-            const logEntry = document.createElement('div');
-            
-            const now = new Date();
-            const timeStr = now.toLocaleTimeString();
-            
-            let statusClass = 'waiting';
-            let statusText = '等待';
-            
-            switch (type) {
-                case 'running':
-                    statusClass = 'running';
-                    statusText = '运行中';
-                    break;
-                case 'completed':
-                    statusClass = 'completed';
-                    statusText = '完成';
-                    break;
-                case 'error':
-                    statusClass = 'error';
-                    statusText = '错误';
-                    break;
-                case 'info':
-                    statusClass = 'waiting';
-                    statusText = '信息';
-                    break;
-            }
-            
-            logEntry.className = `log-entry ${statusClass}`;
-            logEntry.innerHTML = `
-                <span class="log-time">${timeStr}</span>
-                <span class="log-status">${statusText}</span>
-                <span class="log-message">${message}</span>
+
+            const details = document.createElement('details');
+            details.open = true; // Open new one by default
+
+            const summary = document.createElement('summary');
+
+            // Status icon color
+            let iconColor = '#ddd';
+            if (type === 'running') iconColor = '#10b981';
+            if (type === 'completed') iconColor = '#3b82f6';
+            if (type === 'error') iconColor = '#ef4444';
+            if (type === 'info') iconColor = '#f59e0b';
+
+            summary.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span style="width: 10px; height: 10px; border-radius: 50%; background: ${iconColor}; display: inline-block;"></span>
+                    <span>${title}</span>
+                </div>
+                <span style="font-size: 0.8em; color: #999;">${new Date().toLocaleTimeString()}</span>
             `;
-            
-            logContainer.appendChild(logEntry);
+
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'details-content markdown-body';
+            contentDiv.innerHTML = content;
+
+            details.appendChild(summary);
+            details.appendChild(contentDiv);
+
+            logContainer.appendChild(details);
             logContainer.scrollTop = logContainer.scrollHeight;
         }
-        
+
+        function addSimpleLog(msg) {
+            const logContainer = document.getElementById('process-log');
+            const div = document.createElement('div');
+            div.style.padding = '10px';
+            div.style.color = '#666';
+            div.style.textAlign = 'center';
+            div.textContent = msg;
+            logContainer.appendChild(div);
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+
+        // Old addLogEntry for compatibility or simpler calls if needed (replaced by processLogEntry)
+        function addLogEntry(type, message) {
+            processLogEntry(type === 'error' ? 'Error' : 'Log', marked.parse(message), type);
+        }
+
         // 复制报告
         function copyReport() {
             const reportContent = document.getElementById('report-content').textContent;
@@ -555,4 +687,5 @@
         }
     </script>
 </body>
+
 </html>
