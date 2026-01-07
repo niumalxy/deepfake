@@ -1,8 +1,9 @@
+from langchain_core.messages import HumanMessage, SystemMessage
+
 from agent.analysis.prompt.user_prompt import get_analysis_user_prompt
 from agent.analysis.prompt.user_prompt import get_tasks_user_prompt
 from agent.graph.state import AgentState
 from chat_model.openai.langchain_model import model
-from langchain_core.messages import HumanMessage, SystemMessage
 from agent.configuration.configuration import AgentConfiguration
 from logger import logs
 from agent.analysis.prompt.system_prompt import *
