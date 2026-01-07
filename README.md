@@ -45,6 +45,9 @@ uv sync
     ```
 - 其他配置项
 
+### RUN
+python main.py
+
 ### Agent流程图
     ![Agent流程图](agent_flow.png)
 
