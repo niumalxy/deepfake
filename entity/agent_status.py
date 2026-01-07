@@ -8,3 +8,4 @@ class AgentStatus(Enum):
     REFLECTING = "reflecting"
     REPORTING = "reporting"
     FINISHED = "finished"
+    COMPLETED = "completed"

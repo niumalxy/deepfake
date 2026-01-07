@@ -1,4 +1,5 @@
 from langchain_core.messages import HumanMessage, SystemMessage
+import re, json
 
 from agent.analysis.prompt.user_prompt import get_analysis_user_prompt
 from agent.analysis.prompt.user_prompt import get_tasks_user_prompt
@@ -9,7 +10,6 @@ from logger import logs
 from agent.analysis.prompt.system_prompt import *
 from agent.analysis.prompt.user_prompt import *
 from entity.agent_status import AgentStatus
-import re, json
 from db.local_map import status_map
 
 def generate_tasks(state: AgentState, config: AgentConfiguration):
