@@ -15,3 +15,5 @@ conf.yml
 **/log/*
 
 **/docs/*
+
+.trae/

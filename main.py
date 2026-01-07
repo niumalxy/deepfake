@@ -17,8 +17,8 @@ init(app)
 templates = Jinja2Templates(directory="templates")
 
 @app.get("/")
-def render_index():
-    return templates.TemplateResponse("index.html", {"request": Request})
+def render_index(request: Request):
+    return templates.TemplateResponse("index.html", {"request": request})
 
 
 @app.get("/check")
