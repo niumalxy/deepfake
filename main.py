@@ -87,7 +87,7 @@ async def analyze_task_stream(file: UploadFile = File(...)):
     status_map[task_id] = AgentStatus.WAITING
 
     def stream_generator():
-        try:
+        # try:
             graph = create_graph(task_id=task_id, img=img_base64)
             inputs = {
                 "messages": [HumanMessage(content="Start analysis")]
@@ -118,9 +118,9 @@ async def analyze_task_stream(file: UploadFile = File(...)):
             
             yield json.dumps({"status": "finished", "message": "Analysis complete"}, ensure_ascii=False) + "\n"
             
-        except Exception as e:
-            logs.error(f"Task {task_id} failed: {str(e)}")
-            yield json.dumps({"status": "error", "message": str(e)}, ensure_ascii=False) + "\n"
+        # except Exception as e:
+        #     logs.error(f"Task {task_id} failed: {str(e)}")
+        #     yield json.dumps({"status": "error", "message": str(e)}, ensure_ascii=False) + "\n"
 
     return StreamingResponse(stream_generator(), media_type="application/x-ndjson")
 

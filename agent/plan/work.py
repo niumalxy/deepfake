@@ -30,3 +30,8 @@ def plan(state: AgentState, config: AgentConfiguration):
     # task保存至本地
     with open(f"agent/plan/docs/plan_{config.get('task_id', 'default')}.md", "w", encoding="utf-8") as f:
         f.write(response.content)
+
+    return {
+        "plan": response.content,
+        "status": AgentStatus.PLANNING
+    }
