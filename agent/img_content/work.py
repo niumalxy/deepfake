@@ -25,7 +25,6 @@ def extract_img_content(state: AgentState, config: AgentConfiguration) -> str:
     ]
     # 模型输出
     response = model.invoke(messages)
-    state.update({"content": response.content})
     logs.info(f"img_content response: {response.content}")
 
-    return {"messages": [response]}
+    return {"messages": [response], "content": response.content}
