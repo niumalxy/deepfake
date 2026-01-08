@@ -21,16 +21,22 @@ When evaluating an image, you must rigorously examine it from the following pers
 - **Skin & Hair**: Look for disconnected hair strands, unnatural hairlines, or skin texture that lacks pores and natural imperfections.
 - **Symmetry**: Check for unnatural asymmetries in facial features or accessories (e.g., earrings, glasses).
 
-### 3. Lighting, Shadows & Physics
+### 3. Uncanny Valley Effect
+- **Emotional Response**: Pay attention to any immediate intuitive feeling of unease, revulsion, or "creepiness" when looking at faces. This is often a subconscious signal of subtle anomalies.
+- **"Dead" Eyes**: Look for eyes that lack "life" or focus, appear glassy, or have a fixed, vacant stare (often described as the "1000-yard stare").
+- **Incongruent Expressions**: Check if facial expressions match the context and if the micro-expressions (eyes vs. mouth) are consistent. For example, a smiling mouth with unsmiling eyes.
+- **Wax/Plastic Skin**: Skin that appears too perfect, lacking subsurface scattering, or looking like a silicone mask.
+
+### 4. Lighting, Shadows & Physics
 - **Lighting Consistency**: Verify that light sources are consistent across the subject and the background.
 - **Shadows**: Ensure shadows fall in the correct direction and have appropriate density and shape for the light source.
 - **Reflections**: Check reflections in eyes, mirrors, glasses, and water. They must match the environment physically.
 
-### 4. Context & Background
+### 5. Context & Background
 - **Warping**: Look for warped or distorted straight lines in the background (walls, frames) near the subject.
 - **Logical Inconsistencies**: Identify objects that blend into each other, text that is gibberish, or floating objects that defy gravity.
 
-### 5. Other Factors
+### 6. Other Factors
 - You can add other factors that you think are important for deepfake detection.
 
 ## Reasoning & Methodology
