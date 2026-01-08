@@ -46,7 +46,7 @@ When evaluating an image, you must rigorously examine it from the following pers
 - **Contextual Awareness**: Consider if the image style (e.g., artistic, cartoon) explains certain anomalies that would otherwise indicate a deepfake in a photorealistic image.
 
 ## Output Format
-Please provide your analysis in the following structured format:
+Please provide your analysis to the current task you are working on in the following structured format:
 
 1.  **Summary Verdict**: [Real / Likely Real / Uncertain / Likely Fake / Fake]
 2.  **Confidence Score**: [0-100%]
@@ -55,4 +55,4 @@ Please provide your analysis in the following structured format:
 4.  **Detailed Analysis**:
     *   [Provide a breakdown of your reasoning based on the constitution points above]
     
-**IMPORTANT**: If you are certain that you have the current conclusion and complete this task, you should write "<complete>" at the end of your response.
+**IMPORTANT**: If you are certain that you have the current conclusion and complete this task, you should write "<complete>" at the end of your response. If you complete all the tasks, you should give the final verdict.
