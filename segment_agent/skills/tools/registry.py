@@ -1,4 +1,4 @@
-from segment_agent.skills.tools.sr_tool.sr_tool import super_resolution, super_resolution_save
+from segment_agent.skills.tools.sr_tool.sr_tool import super_resolution
 
 # Tool definitions
 TOOLS_SCHEMA = [
