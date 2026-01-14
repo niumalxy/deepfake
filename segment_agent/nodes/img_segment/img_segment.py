@@ -18,7 +18,7 @@ def crop_image_by_coords(state: AgentState, top_left: tuple, bottom_right: tuple
         >>> cropped = crop_image_by_coords(img, (100, 100), (300, 300))
     """
     origin_img = state['origin_img']
-    for img in state['cropped_imgs']:
+    for img in state['cropping_imgs']:
         x1, y1 = top_left
         x2, y2 = bottom_right
         
