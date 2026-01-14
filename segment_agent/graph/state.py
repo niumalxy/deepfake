@@ -6,3 +6,5 @@ from entity.agent_status import AgentStatus
 class AgentState(TypedDict):
     status: AgentStatus
     messages: Annotated[Sequence[BaseMessage], operator.add]
+    origin_img: Image.Image
+    cropped_imgs: list[Image.Image] = []
