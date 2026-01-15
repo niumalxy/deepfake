@@ -1,28 +1,54 @@
 from PIL import Image
+from segment_agent.graph.state import AgentState, CroppedImg
+from entity.segment_agent_status import AgentStatus
+import os
 
-def crop_image_by_coords(state: AgentState, top_left: tuple, bottom_right: tuple) -> Image.Image:
+
+def crop_image_by_coords(state: AgentState, config: dict):
     """
-    根据左上角和右下角坐标切割图片
+    根据坐标裁剪图像并保存
     
     Args:
-        state: AgentState
-        top_left: 左上角坐标 (x1, y1)
-        bottom_right: 右下角坐标 (x2, y2)
+        state: AgentState，包含origin_img和cropping_imgs
+        config: 配置字典，包含task_id等配置信息
     
     Returns:
-        PIL.Image: 切割后的图片
-    
-    Example:
-        >>> from PIL import Image
-        >>> img = Image.open('example.jpg')
-        >>> cropped = crop_image_by_coords(img, (100, 100), (300, 300))
+        AgentState: 更新后的state
     """
     origin_img = state['origin_img']
-    for img in state['cropping_imgs']:
-        x1, y1 = top_left
-        x2, y2 = bottom_right
-        
+    origin_save_path = "./segment_agent/nodes/img_content/docs"
+    task_id = config["task_id"]
+    
+    # 确保保存目录存在
+    os.makedirs(origin_save_path, exist_ok=True)
+    
+    cropped_imgs = []
+    cropping_imgs = state.get('cropping_imgs', [])
+    
+    for idx, item in enumerate(cropping_imgs):
+        x1, y1 = item.get('top_left', (0, 0))
+        x2, y2 = item.get('bottom_right', (0, 0))
+        items = item.get('items', '')
+        description = item.get('description', '')
+
         box = (x1, y1, x2, y2)
         img = origin_img.crop(box)
-        state['cropped_imgs'].append(img)
-    return state
+        
+        # 保存裁剪后的图像
+        save_path = os.path.join(origin_save_path, f"{task_id}_{idx}.jpg")
+        img.save(save_path)
+        
+        # 创建CroppedImg对象
+        cropped_img = CroppedImg(
+            save_path=save_path,
+            items=items,
+            description=description,
+            is_done=False,
+            analysis_result=""
+        )
+        cropped_imgs.append(cropped_img)
+    
+    return {
+        "cropped_imgs": cropped_imgs,
+        "status": AgentStatus.ANALYZING,
+    }

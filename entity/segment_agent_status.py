@@ -1,11 +1,13 @@
 from enum import Enum
+from pydantic import BaseModel
 
 class AgentStatus(Enum):
-    WAITING = "waiting"
-    ANALYZING = "analyzing"
+    INITIATING = "init"
     PLANNING = "planning"
-    EXECUTING = "executing"
+    ANALYZING = "analyzing"
+    TOOL_EXECUTING = "executing_tool"
     REFLECTING = "reflecting"
     REPORTING = "reporting"
     FINISHED = "finished"
     COMPLETED = "completed"
+
