@@ -1,5 +1,5 @@
-from pydantic import BaseModel
+from typing import TypedDict
 
-class SegmentAgentConfig(BaseModel):
+class SegmentAgentConfig(TypedDict):
     task_id: str
     

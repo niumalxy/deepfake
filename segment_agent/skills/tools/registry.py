@@ -102,7 +102,7 @@ TOOLS_SCHEMA = [
                     "expand": {
                         "type": "boolean",
                         "description": "If True, expands the output image to fit the rotated image. Default is False.",
-                        "default": false
+                        "default": False
                     }
                 },
                 "required": []

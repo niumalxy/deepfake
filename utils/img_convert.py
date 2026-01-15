@@ -24,6 +24,8 @@ def img_to_base64(img: Image.Image, format: str = "JPEG") -> str:
         base64编码的字符串
     """
     buffered = BytesIO()
+    if img.mode == "RGBA" and format.upper() == "JPEG":
+        img = img.convert("RGB")
     img.save(buffered, format=format)
     img_bytes = buffered.getvalue()
     img_base64 = base64.b64encode(img_bytes).decode("utf-8")

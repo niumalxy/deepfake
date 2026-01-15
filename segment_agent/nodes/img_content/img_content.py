@@ -66,33 +66,18 @@ def extract_suspicious_regions(state: AgentState, config: Dict[str, Any]):
         
         for part_key, part_value in result.items():
             if part_key.startswith('part_'):
-                location = part_value.get('location', '')
-                coordinates_str = part_value.get('coordinates', '')
+                location = part_value.get('location', (0, 0, 0, 0))
                 description = part_value.get('description', '')
-                
-                coords_match = re.search(r'\(\s*(\d+)\s*,\s*(\d+)\s*\)\s*,\s*\(\s*(\d+)\s*,\s*(\d+)\s*\)', coordinates_str)
-                if coords_match:
-                    x1 = int(coords_match.group(1))
-                    y1 = int(coords_match.group(2))
-                    x2 = int(coords_match.group(3))
-                    y2 = int(coords_match.group(4))
-                    
-                    x1, x2 = min(x1, x2), max(x1, x2)
-                    y1, y2 = min(y1, y2), max(y1, y2)
-                    
-                    x1 = max(0, min(x1, width - 1))
-                    y1 = max(0, min(y1, height - 1))
-                    x2 = max(0, min(x2, width))
-                    y2 = max(0, min(y2, height))
-                    
-                    if x2 > x1 and y2 > y1:
-                        cropping_imgs.append(CroppingImg(
-                            top_left=(x1, y1),
-                            bottom_right=(x2, y2),
-                            description=description,
-                            save_path=""
-                        ))
-                        logs.info(f"Extracted region: {location}, coords: ({x1}, {y1}), ({x2}, {y2}), description: {description}")
+                items = part_value.get('items', '')
+
+                cropping_imgs.append(CroppingImg(
+                    items=items,
+                    top_left=location[:2],
+                    bottom_right=location[2:],
+                    description=description,
+                    save_path=""
+                ))
+                logs.info(f"Extracted region: {items}, location: {location}, description: {description}")
         
         logs.info(f"Total suspicious regions extracted: {len(cropping_imgs)}")
         

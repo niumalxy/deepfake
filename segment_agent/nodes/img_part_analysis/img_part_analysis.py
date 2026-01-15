@@ -76,13 +76,8 @@ def analyze_partial_image(state: AgentState, config: Dict[str, Any]) -> Dict[str
         cropped_imgs[current_idx]['analysis_result'] = f"Error: {str(e)}"
         
         next_idx = current_idx + 1
-        if next_idx >= len(cropped_imgs):
-            status = AgentStatus.FINISHED
-        else:
-            status = AgentStatus.ANALYZING
-        
+
         return {
-            "status": status,
             "cropped_imgs": cropped_imgs,
             "current_analysis_idx": next_idx
         }

@@ -87,21 +87,21 @@ IMAGE_ANALYSIS_PROMPT = """# 角色
 
 # 输出要求：
 - 识别图像中所有可疑的伪造区域
-- 为每个区域提供位置描述(items)、精确坐标(coordinates)和简要理由(description)
+- 为每个区域提供位置描述(items)、精确的左上角和右下角坐标和简要理由(description)
 - description应简洁明了，不超过20个字
-- 坐标格式为"(x1, y1), (x2, y2)"，其中(x1,y1)为左上角，(x2,y2)为右下角
+- 坐标格式均为[x1, y1, x2, y2]，其中(x1,y1)为左上角，(x2,y2)为右下角
 - 如果没有发现可疑区域，返回空对象{}
 
 **输出格式（JSON）：**
 {
     "part_1": {
         "items": "Human Faces",
-        "coordinates": "(x1, y1), (x2, y2)",
+        "location": [x1, y1, x2, y2],
         "description": "简要理由"
     },
     "part_2": {
         "items": "A specific area in the image",
-        "coordinates": "(x1, y1), (x2, y2)",
+        "location": [x1, y1, x2, y2],
         "description": "简要理由"
     }
 }

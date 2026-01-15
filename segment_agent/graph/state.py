@@ -5,6 +5,7 @@ from entity.segment_agent_status import AgentStatus
 from PIL import Image
 
 class CroppingImg(TypedDict):
+    items: str
     top_left: tuple[int, int]
     bottom_right: tuple[int, int]
     description: str
@@ -18,7 +19,7 @@ class CroppedImg(TypedDict):
     analysis_result: str = ""
 
 class AgentState(TypedDict):
-    status: AgentStatus
+    status: Annotated[AgentStatus, lambda x, y: y]
     content_messages: Annotated[Sequence[BaseMessage], operator.add]
     analysis_messages: Annotated[Sequence[BaseMessage], operator.add]
     origin_img: Image.Image

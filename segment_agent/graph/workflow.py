@@ -32,7 +32,7 @@ def has_suspicious_regions(state: AgentState) -> str:
     Returns:
         str: "has_regions" 或 "no_regions"
     """
-    cropping_imgs = state.get('cropped_imgs', [])
+    cropping_imgs = state.get('cropping_imgs', [])
     if cropping_imgs:
         return "has_regions"
     return "no_regions"
@@ -48,7 +48,7 @@ def have_next_part(state: AgentState) -> str:
     Returns:
         str: "has_regions" 或 "no_regions"
     """
-    current_idx = state.get('current_analysis_idx', 0)
+    current_idx = state.get('current_img_idx', 0)
     cropped_imgs = state.get('cropped_imgs', [])
     if current_idx == len(cropped_imgs):
         return "no"

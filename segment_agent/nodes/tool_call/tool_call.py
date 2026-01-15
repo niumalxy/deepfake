@@ -45,7 +45,9 @@ def tool_call(state: AgentState, config: Dict[str, Any]) -> Dict[str, Any]:
     for tool_call in last_ai_message.tool_calls:
         function_name = tool_call['name']
         function_args = tool_call['args']
-        
+        current_idx = state.get('current_img_idx', 0)
+        logs.info(f"Calling tool: {function_name} with args: {function_args}")
+        function_args["img"] = Image.open(state["cropped_imgs"][current_idx]["save_path"])
         if function_name in TOOLS_MAPPING:
             try:
                 # 执行工具函数

@@ -104,5 +104,7 @@ class RemoteSuperResolutionModel:
         :param scale: 放大倍数，默认为4
         """
         output_img = self.super_resolution(img, scale)
+        if output_img.mode == "RGBA" and output_path.lower().endswith((".jpg", ".jpeg")):
+            output_img = output_img.convert("RGB")
         output_img.save(output_path)
         print(f"Remote super-resolution image saved to {output_path}")

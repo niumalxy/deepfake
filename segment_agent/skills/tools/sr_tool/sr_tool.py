@@ -1,7 +1,10 @@
 from PIL import Image
 from segment_agent.skills.tools.sr_tool.local_sr_model import LocalSuperResolutionModel
 from segment_agent.skills.tools.sr_tool.remote_sr_model import RemoteSuperResolutionModel
-from segment_agent.skills.tools.sr_tool import sr_model
+from os import environ
+
+local_sr_model = None
+remote_sr_model = None
 
 def get_local_sr_model(model_path: str = None, model_type: str = "EDSR") -> LocalSuperResolutionModel:
     global local_sr_model
@@ -15,6 +18,23 @@ def get_remote_sr_model(api_url: str = None, api_key: str = None, timeout: int =
         remote_sr_model = RemoteSuperResolutionModel(api_url, api_key, timeout)
     return remote_sr_model
 
+def get_sr_model():
+    global local_sr_model, remote_sr_model
+    sr_mode = environ.get("SR_MODEL", "local")
+    if sr_mode == "local":
+        if local_sr_model is None:
+            local_sr_model = get_local_sr_model()
+        return local_sr_model
+    elif sr_mode == "remote":
+        if remote_sr_model is None:
+            remote_sr_model = get_remote_sr_model()
+        return remote_sr_model
+    else:
+        print(f"Unknown SR_MODEL value: {sr_mode}. Using local mode as default.")
+        if local_sr_model is None:
+            local_sr_model = get_local_sr_model()
+        return local_sr_model
+
 def super_resolution(img: Image.Image, scale: int = 4) -> Image.Image:
     """
     使用超分辨率模型增强图像分辨率
@@ -22,6 +42,7 @@ def super_resolution(img: Image.Image, scale: int = 4) -> Image.Image:
     :param scale: 放大倍数，默认为4
     :return: PIL.Image对象，超分辨率处理后的图像
     """
+    sr_model = get_sr_model()
     return sr_model.super_resolution(img, scale)
 
 def super_resolution_save(img: Image.Image, output_path: str, scale: int = 4, mode: str = "local", **kwargs) -> None:

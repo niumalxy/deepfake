@@ -381,6 +381,23 @@
             <p>支持 JPG、PNG、WEBP 等格式</p>
             <button class="upload-btn" onclick="document.getElementById('file-input').click()">选择图片</button>
             <div id="file-name"></div>
+            
+            <!-- Agent 选择 -->
+            <div style="margin: 15px 0; padding: 15px 0; border-top: 1px solid #eee;">
+                <h4 style="color: #333; margin-bottom: 10px;">选择分析代理</h4>
+                <div style="display: flex; gap: 20px; justify-content: center; flex-wrap: wrap;">
+                    <label style="display: flex; align-items: center; cursor: pointer;">
+                        <input type="radio" name="agent-type" value="standard" checked style="margin-right: 8px; width: 16px; height: 16px;">
+                        <span style="color: #666;">标准代理</span>
+                    </label>
+                    <label style="display: flex; align-items: center; cursor: pointer;">
+                        <input type="radio" name="agent-type" value="segment" style="margin-right: 8px; width: 16px; height: 16px;">
+                        <span style="color: #666;">分段代理</span>
+                    </label>
+                </div>
+            </div>
+            
+            <!-- 中文报告选项 -->
             <div style="margin: 10px 0;">
                 <label style="display: inline-flex; align-items: center; cursor: pointer;">
                     <input type="checkbox" id="use-chinese" style="margin-right: 8px; width: 16px; height: 16px;">
@@ -486,6 +503,8 @@
                 const formData = new FormData();
                 formData.append('file', selectedFile);
 
+                // 获取所选的agent类型
+                const selectedAgent = document.querySelector('input[name="agent-type"]:checked').value;
                 // Add language option
                 const useChinese = document.getElementById('use-chinese').checked;
                 // Append as query param or form data? FastAPI expects query param if typed as bool in method signature usually, 
@@ -497,6 +516,7 @@
 
                 // 发送请求
                 const url = new URL('/api/task/stream', window.location.href);
+                url.searchParams.append('agent_type', selectedAgent);
                 url.searchParams.append('use_chinese', useChinese);
 
                 const response = await fetch(url.toString(), {
