@@ -6,6 +6,7 @@ from chat_model.openai.langchain_model import model
 from entity.segment_agent_status import AgentStatus
 from logger import logs
 from utils.img_convert import img_path_to_base64, img_to_base64
+from segment_agent.skills.tools.registry import TOOLS_SCHEMA
 
 
 def analyze_partial_image(state: AgentState, config: Dict[str, Any]) -> Dict[str, Any]:
@@ -61,7 +62,9 @@ def analyze_partial_image(state: AgentState, config: Dict[str, Any]) -> Dict[str
             HumanMessage(content=origin_img_content)
         ]  if not analysis_messages else analysis_messages
         
-        response = model.invoke(messages)
+        # 绑定工具到模型，使模型知道可以使用哪些工具
+        bound_model = model.bind_tools(TOOLS_SCHEMA)
+        response = bound_model.invoke(messages)
         
         return {
             "analysis_messages": messages + [response],
