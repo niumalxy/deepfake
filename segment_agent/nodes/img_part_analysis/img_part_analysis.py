@@ -30,6 +30,8 @@ def analyze_partial_image(state: AgentState, config: Dict[str, Any]) -> Dict[str
     current_idx = state.get('current_img_idx', 0)
     current_img = cropped_imgs[current_idx]
     logs.info(f"Analyzing image {current_idx + 1}/{len(cropped_imgs)}: {current_img['save_path']}")
+
+    logs.info(f"history: {len(state.get('analysis_messages', []))}")
     try:
         img_base64 = img_path_to_base64(current_img['save_path'])
         desc = {

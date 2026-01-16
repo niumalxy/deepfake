@@ -349,11 +349,11 @@ async def analyze_task_stream_segment(file: UploadFile = File(...)):
     task_id = _init_task("segment")
 
     def stream_generator():
-        try:
+        #try:
             yield from _stream_segment_agent(img_base64, task_id)
-        except Exception as e:
-            logs.error(f"Task {task_id} failed: {str(e)}")
-            yield json.dumps({"status": "error", "message": str(e)}, ensure_ascii=False) + "\n"
+        #except Exception as e:
+            #logs.error(f"Task {task_id} failed: {str(e)}")
+            #yield json.dumps({"status": "error", "message": str(e)}, ensure_ascii=False) + "\n"
 
     return StreamingResponse(stream_generator(), media_type="application/x-ndjson")
 

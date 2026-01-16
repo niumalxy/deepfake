@@ -66,6 +66,9 @@ def tool_call(state: AgentState, config: Dict[str, Any]) -> Dict[str, Any]:
                             "url": f"data:image/jpeg;base64,{utils.img_to_base64(tool_result)}"
                         }
                     }
+                    # 为防止多张图片导致token溢出，把历史记录包含图像的内容清除
+                    ### TODO
+                    
                 else:
                     tool_result = str(tool_result)
 
