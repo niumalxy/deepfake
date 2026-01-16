@@ -160,12 +160,16 @@ def _stream_segment_agent(img_base64: str, task_id: str):
                         if isinstance(content, str):
                             # Use small text for inference process
                             message = f'<div style="font-size: 0.8em; color: #666;">{content}</div>'
+                yield json.dumps({
+                        "current_node": "内容分析",
+                    }, ensure_ascii=False) + "\n"
 
             elif node == "img_cropping":
                 message = "Segmenting image into parts for detailed analysis"
                 # 添加cropped_imgs到流式输出
                 if current_cropped_imgs:
                     yield json.dumps({
+                        "current_node": "局部提取 ()",
                         "status": status, 
                         "message": message,
                         "cropped_imgs": current_cropped_imgs,
@@ -199,12 +203,13 @@ def _stream_segment_agent(img_base64: str, task_id: str):
                 # 更新cropped_imgs状态
                 if current_cropped_imgs:
                     yield json.dumps({
+                        "current_node": "图像区域分析",
                         "status": status, 
                         "message": message,
                         "cropped_imgs": current_cropped_imgs,
                         "current_task": current_img_idx_val + 1,
                         "total_tasks": total_imgs
-                    }, ensure_ascii=False) + "\n"
+                    }, ensure_ascii=False)
                     continue
             elif node == "tool_call":
                 continue
@@ -215,11 +220,17 @@ def _stream_segment_agent(img_base64: str, task_id: str):
                 finished_idx = current_img_idx_val - 1
                 result_text = ""
                 if 0 <= finished_idx < len(current_cropped_imgs):
+                    is_done = current_cropped_imgs[finished_idx]["is_done"]
                     result_text = current_cropped_imgs[finished_idx]["analysis_result"]
+                    if is_done:
+                        message = f"Part {finished_idx + 1} analysis completed: {result_text}"
+                else:
+                    message = f"Part {finished_idx + 1} analysis failed"
                 
                 yield json.dumps({
+                    "current_node": "图像区域分析",
                     "status": "task_completed", 
-                    "message": result_text,
+                    "result": result_text,
                     "cropped_imgs": current_cropped_imgs,
                     "current_task": current_img_idx_val,
                     "total_tasks": len(current_cropped_imgs)

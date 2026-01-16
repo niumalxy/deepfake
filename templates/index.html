@@ -807,7 +807,7 @@
 
         // 处理流式数据
         function processStreamData(data) {
-            const { status, message, current_task, total_tasks, cropped_imgs } = data;
+            const { status, message, current_task, total_tasks, cropped_imgs, current_node } = data;
 
             // Mark previous running task as completed
             const runningTask = document.querySelector('#process-log .log-entry[data-status="running"]');
@@ -876,13 +876,13 @@
             switch (status) {
                 // Segment Agent 节点状态
                 case 'img_content':
-                    title = '图片内容提取';
+                    title = current_node || '图片内容提取';
                     type = 'completed';
                     iconClass = 'completed';
                     processLogEntry(title, renderedMessage, type, iconClass);
                     break;
                 case 'img_cropping':
-                    title = '图像分割';
+                    title = current_node || '图像分割';
                     type = 'completed';
                     iconClass = 'completed';
                     processLogEntry(title, renderedMessage, type, iconClass);
@@ -898,9 +898,11 @@
                         // 生成todo list HTML
                         todoListHTML = generateTodoListHTML(cropped_imgs);
                         
-                        title = `区域分析 (完成进度 ${completedCount}/${actualTotalTasks})`;
+                        const nodeName = current_node || '区域分析';
+                        title = `${nodeName} (完成进度 ${completedCount}/${actualTotalTasks})`;
                     } else {
-                         title = `区域分析 (任务 ${current_task || 1}/${total_tasks || '?'})`;
+                         const nodeName = current_node || '区域分析';
+                         title = `${nodeName} (任务 ${current_task || 1}/${total_tasks || '?'})`;
                     }
                     
                     type = 'running';
@@ -919,7 +921,8 @@
                          // Structure: <div>icon, <span>title</span></div>
                          const titleEl = lastEntry.querySelector('summary > div > span');
                          if (titleEl) {
-                             titleEl.textContent = `区域分析 (完成进度 ${completedCount}/${total_tasks})`;
+                             const nodeName = current_node || '区域分析';
+                             titleEl.textContent = `${nodeName} (完成进度 ${completedCount}/${total_tasks})`;
                          }
 
                          // Re-generate Todo List
