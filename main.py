@@ -135,46 +135,98 @@ def _stream_segment_agent(img_base64: str, task_id: str):
     graph = create_graph(task_id=task_id, img=img)
     inputs = {}
     
+    current_cropped_imgs = []
+    current_img_idx_val = 0
+    
     for event in graph.stream(inputs):
         for node, state in event.items():
             status = node
             message = ""
             
+            # Update local tracking
+            if "cropped_imgs" in state:
+                current_cropped_imgs = state["cropped_imgs"]
+            if "current_img_idx" in state:
+                current_img_idx_val = state["current_img_idx"]
+            
             # segment_agent的状态处理
             if node == "img_content":
                 message = "Extracting image content and identifying suspicious regions"
+                # Show inference process (model reasoning)
+                if "content_messages" in state and state["content_messages"]:
+                    last_msg = state["content_messages"][-1]
+                    if hasattr(last_msg, 'content'):
+                        content = last_msg.content
+                        if isinstance(content, str):
+                            # Use small text for inference process
+                            message = f'<div style="font-size: 0.8em; color: #666;">{content}</div>'
+
             elif node == "img_cropping":
                 message = "Segmenting image into parts for detailed analysis"
                 # 添加cropped_imgs到流式输出
-                if "cropped_imgs" in state:
+                if current_cropped_imgs:
                     yield json.dumps({
                         "status": status, 
                         "message": message,
-                        "cropped_imgs": state["cropped_imgs"],
+                        "cropped_imgs": current_cropped_imgs,
                         "current_task": 0,
-                        "total_tasks": len(state["cropped_imgs"]) if state["cropped_imgs"] else 0
+                        "total_tasks": len(current_cropped_imgs)
                     }, ensure_ascii=False) + "\n"
                     continue
             elif node == "img_part_analysis":
                 message = "Analyzing image part for deepfake indicators"
+                
+                # Try to get the actual analysis content
+                if "analysis_messages" in state and state["analysis_messages"]:
+                    msgs = state["analysis_messages"]
+                    if msgs:
+                        last_msg = msgs[-1]
+                        if hasattr(last_msg, 'content'):
+                            if isinstance(last_msg.content, str):
+                                message = last_msg.content
+                            elif isinstance(last_msg.content, list):
+                                for item in last_msg.content:
+                                    if isinstance(item, dict) and 'text' in item:
+                                        message = item['text']
+                                        break
+                
+                # Wrap in small text for inference process
+                if message and message != "Analyzing image part for deepfake indicators":
+                    message = f'<div style="font-size: 0.8em; color: #666;">{message}</div>'
+                
                 # 获取当前分析索引
-                current_idx = state.get("current_img_idx", 0)
-                total_imgs = len(state.get("cropped_imgs", []))
+                total_imgs = len(current_cropped_imgs)
                 # 更新cropped_imgs状态
-                if "cropped_imgs" in state:
+                if current_cropped_imgs:
                     yield json.dumps({
                         "status": status, 
                         "message": message,
-                        "cropped_imgs": state["cropped_imgs"],
-                        "current_task": current_idx + 1,
+                        "cropped_imgs": current_cropped_imgs,
+                        "current_task": current_img_idx_val + 1,
                         "total_tasks": total_imgs
                     }, ensure_ascii=False) + "\n"
                     continue
             elif node == "tool_call":
-                message = "Executing tools for enhanced analysis"
+                continue
+
             elif node == "next_part":
-                message = "Determining next region to analyze"
+                # Yield task completion update
+                # current_img_idx_val is already updated to the next index
+                finished_idx = current_img_idx_val - 1
+                result_text = ""
+                if 0 <= finished_idx < len(current_cropped_imgs):
+                    result_text = current_cropped_imgs[finished_idx]["analysis_result"]
+                
+                yield json.dumps({
+                    "status": "task_completed", 
+                    "message": result_text,
+                    "cropped_imgs": current_cropped_imgs,
+                    "current_task": current_img_idx_val,
+                    "total_tasks": len(current_cropped_imgs)
+                }, ensure_ascii=False) + "\n"
+                
             elif node == "report":
+                status = "summary" # Route to Analysis Report section
                 message = "Generating comprehensive deepfake detection report"
                 # Get report content
                 if "report" in state:
@@ -286,9 +338,9 @@ async def analyze_task_stream_segment(file: UploadFile = File(...)):
     task_id = _init_task("segment")
 
     def stream_generator():
-        #try:
+        try:
             yield from _stream_segment_agent(img_base64, task_id)
-        #except Exception as e:
+        except Exception as e:
             logs.error(f"Task {task_id} failed: {str(e)}")
             yield json.dumps({"status": "error", "message": str(e)}, ensure_ascii=False) + "\n"
 

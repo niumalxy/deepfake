@@ -21,8 +21,7 @@ class CroppedImg(TypedDict):
 class AgentState(TypedDict):
     status: Annotated[AgentStatus, lambda x, y: y]
     content_messages: Annotated[Sequence[BaseMessage], operator.add]
-    # analysis_messages: Annotated[Sequence[BaseMessage], operator.add]
-    analysis_messages: list = []
+    analysis_messages: Annotated[Sequence[BaseMessage], operator.add]
     origin_img: Image.Image
     cropped_imgs: list[CroppedImg] = []    # 存切割后的图像路径
     cropping_imgs: list[CroppingImg] = []
