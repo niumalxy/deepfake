@@ -146,6 +146,190 @@
             }
         }
 
+        /* 旋转动画 */
+        @keyframes rotate {
+            from {
+                transform: rotate(0deg);
+            }
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* 闪烁动画 */
+        @keyframes blink {
+            0%, 50%, 100% {
+                opacity: 1;
+            }
+            25%, 75% {
+                opacity: 0.3;
+            }
+        }
+
+        /* 摇摆动画 */
+        @keyframes swing {
+            0%, 100% {
+                transform: rotate(0deg);
+            }
+            25% {
+                transform: rotate(15deg);
+            }
+            75% {
+                transform: rotate(-15deg);
+            }
+        }
+
+        /* 呼吸动画 */
+        @keyframes breathe {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.2);
+            }
+        }
+
+        /* 打字机效果 */
+        @keyframes typing {
+            from {
+                width: 0;
+            }
+            to {
+                width: 100%;
+            }
+        }
+
+        /* 动态图标样式 */
+        .status-icon {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+
+        .status-icon.rotating {
+            background: #667eea;
+            border-radius: 50%;
+            animation: rotate 1.5s linear infinite;
+        }
+
+        .status-icon.pulsing {
+            background: #4ade80;
+            border-radius: 50%;
+            animation: pulse 1.5s infinite;
+        }
+
+        .status-icon.blinking {
+            background: #f59e0b;
+            border-radius: 50%;
+            animation: blink 1s infinite;
+        }
+
+        .status-icon.swinging {
+            background: #ec4899;
+            border-radius: 50%;
+            animation: swing 1s ease-in-out infinite;
+        }
+
+        .status-icon.breathing {
+            background: #8b5cf6;
+            border-radius: 50%;
+            animation: breathe 2s ease-in-out infinite;
+        }
+
+        .status-icon.typing {
+            background: #14b8a6;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            animation: blink 1s infinite;
+        }
+
+        .status-icon.completed {
+            background: transparent;
+            color: #4ade80;
+            font-size: 16px;
+            content: '✓';
+        }
+
+        /* Todo list styles */
+        .todo-section {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+            border: 1px solid #e9ecef;
+        }
+
+        .todo-title {
+            font-size: 1.2em;
+            color: #333;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        .todo-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .todo-item {
+            display: flex;
+            align-items: center;
+            padding: 10px 15px;
+            margin-bottom: 10px;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+            transition: all 0.3s ease;
+        }
+
+        .todo-item:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        .todo-item.done {
+            background: #f0fdf4;
+            border-color: #bbf7d0;
+        }
+
+        .todo-checkbox {
+            margin-right: 12px;
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: #4ade80;
+        }
+
+        .todo-text {
+            flex: 1;
+            color: #333;
+            transition: all 0.3s ease;
+        }
+
+        .todo-item.done .todo-text {
+            text-decoration: line-through;
+            color: #6b7280;
+        }
+
+        .todo-status {
+            font-size: 0.85em;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-weight: 500;
+        }
+
+        .todo-status.pending {
+            background: #fef3c7;
+            color: #d97706;
+        }
+
+        .todo-status.completed {
+            background: #d1fae5;
+            color: #059669;
+        }
+
         #process-log {
             background: #fff;
             border-radius: 8px;
@@ -384,16 +568,12 @@
             
             <!-- Agent 选择 -->
             <div style="margin: 15px 0; padding: 15px 0; border-top: 1px solid #eee;">
-                <h4 style="color: #333; margin-bottom: 10px;">选择分析代理</h4>
-                <div style="display: flex; gap: 20px; justify-content: center; flex-wrap: wrap;">
-                    <label style="display: flex; align-items: center; cursor: pointer;">
-                        <input type="radio" name="agent-type" value="standard" checked style="margin-right: 8px; width: 16px; height: 16px;">
-                        <span style="color: #666;">标准代理</span>
-                    </label>
-                    <label style="display: flex; align-items: center; cursor: pointer;">
-                        <input type="radio" name="agent-type" value="segment" style="margin-right: 8px; width: 16px; height: 16px;">
-                        <span style="color: #666;">分段代理</span>
-                    </label>
+                <h4 style="color: #333; margin-bottom: 10px;">选择分析模式</h4>
+                <div style="display: flex; justify-content: center;">
+                    <select id="agent-type" name="agent-type" style="padding: 8px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 16px; color: #333; background: white;">
+                        <option value="standard" selected>标准模式</option>
+                        <option value="segment">局部检测模式</option>
+                    </select>
                 </div>
             </div>
             
@@ -415,6 +595,8 @@
             </h2>
             <div id="process-log"></div>
         </div>
+
+
 
         <!-- 报告区域 -->
         <div class="report-section">
@@ -504,20 +686,20 @@
                 formData.append('file', selectedFile);
 
                 // 获取所选的agent类型
-                const selectedAgent = document.querySelector('input[name="agent-type"]:checked').value;
+                const selectedAgent = document.getElementById('agent-type').value;
                 // Add language option
                 const useChinese = document.getElementById('use-chinese').checked;
-                // Append as query param or form data? FastAPI expects query param if typed as bool in method signature usually, 
-                // but `Form(...)` would be needed for form data. 
-                // Let's check main.py signature: `use_chinese: bool = False` along with `File`. 
-                // FastAPI treats simple types mixed with File/Form as query params by default unless Form is used.
-                // Re-checking main.py: `async def analyze_task_stream(file: UploadFile = File(...), use_chinese: bool = False):`
-                // This means use_chinese is expected as a QUERY PARAMETER.
 
                 // 发送请求
-                const url = new URL('/api/task/stream', window.location.href);
-                url.searchParams.append('agent_type', selectedAgent);
-                url.searchParams.append('use_chinese', useChinese);
+                let url;
+                // 根据选择的agent类型构建不同的API URL
+                if (selectedAgent === 'standard') {
+                    url = new URL('/api/task/stream/standard', window.location.href);
+                    url.searchParams.append('use_chinese', useChinese);
+                } else {
+                    // segment agent
+                    url = new URL('/api/task/stream/segment', window.location.href);
+                }
 
                 const response = await fetch(url.toString(), {
                     method: 'POST',
@@ -569,7 +751,7 @@
 
         // 处理流式数据
         function processStreamData(data) {
-            const { status, message, current_task, total_tasks } = data;
+            const { status, message, current_task, total_tasks, cropped_imgs } = data;
 
             // Auto collapse previous details when a new distinct status comes
             // But we might want to keep the immediate previous one open if it's related?
@@ -593,27 +775,96 @@
 
             let title = '';
             let type = 'running';
+            let iconClass = '';
 
+            // Segment Agent 状态映射
+            const segmentAgentStatusMap = {
+                'init': { title: '初始化', icon: 'rotating', type: 'running' },
+                'planning': { title: '分析规划', icon: 'pulsing', type: 'running' },
+                'analyzing': { title: '图像分析', icon: 'blinking', type: 'running' },
+                'executing_tool': { title: '工具执行', icon: 'swinging', type: 'running' },
+                'reflecting': { title: '结果反思', icon: 'breathing', type: 'running' },
+                'reporting': { title: '生成报告', icon: 'typing', type: 'running' },
+                'finished': { title: '分析完成', icon: 'completed', type: 'completed' },
+                'completed': { title: '任务完成', icon: 'completed', type: 'completed' }
+            };
+
+            // 保存cropped_imgs，用于后续生成todo list
+            let todoListHTML = '';
+            let actualTotalTasks = total_tasks;
+            let actualCurrentTask = current_task;
+
+            // Node 状态映射
             switch (status) {
+                // Segment Agent 节点状态
                 case 'img_content':
                     title = '图片内容提取';
-                    processLogEntry(title, renderedMessage, 'completed');
+                    type = 'completed';
+                    iconClass = 'completed';
+                    processLogEntry(title, renderedMessage, type, iconClass);
                     break;
+                case 'img_cropping':
+                    title = '图像分割';
+                    type = 'completed';
+                    iconClass = 'completed';
+                    processLogEntry(title, renderedMessage, type, iconClass);
+                    break;
+                case 'img_part_analysis':
+                    // 修复任务数量问题
+                    if (cropped_imgs && Array.isArray(cropped_imgs)) {
+                        actualTotalTasks = cropped_imgs.length;
+                        // 确保current_task从1开始计数，与实际分析进度一致
+                        actualCurrentTask = current_task || 1;
+                        // 生成todo list HTML
+                        todoListHTML = generateTodoListHTML(cropped_imgs);
+                    }
+                    
+                    title = `区域分析 (任务 ${actualCurrentTask}/${actualTotalTasks})`;
+                    type = 'running';
+                    iconClass = 'blinking';
+                    // 将todo list嵌入到日志内容中
+                    const contentWithTodo = renderedMessage + todoListHTML;
+                    processLogEntry(title, contentWithTodo, type, iconClass);
+                    break;
+                // Segment Agent 全局状态
+                case 'init':
+                case 'planning':
+                case 'analyzing':
+                case 'executing_tool':
+                case 'reflecting':
+                case 'reporting':
+                case 'finished':
+                case 'completed':
+                    const statusInfo = segmentAgentStatusMap[status];
+                    title = statusInfo.title;
+                    type = statusInfo.type;
+                    iconClass = statusInfo.icon;
+                    processLogEntry(title, renderedMessage, type, iconClass);
+                    break;
+                // 其他状态
                 case 'plan':
                     title = '分析计划';
-                    processLogEntry(title, renderedMessage, 'completed');
+                    type = 'completed';
+                    iconClass = 'completed';
+                    processLogEntry(title, renderedMessage, type, iconClass);
                     break;
                 case 'tasks':
                     title = '生成任务列表';
-                    processLogEntry(title, renderedMessage, 'completed');
+                    type = 'completed';
+                    iconClass = 'completed';
+                    processLogEntry(title, renderedMessage, type, iconClass);
                     break;
                 case 'analysis':
                     title = `执行分析 (任务 ${current_task}/${total_tasks})`;
-                    processLogEntry(title, renderedMessage, 'running');
+                    type = 'running';
+                    iconClass = 'blinking';
+                    processLogEntry(title, renderedMessage, type, iconClass);
                     break;
                 case 'summary':
                     title = '生成分析报告';
-                    processLogEntry(title, renderedMessage, 'completed');
+                    type = 'completed';
+                    iconClass = 'completed';
+                    processLogEntry(title, renderedMessage, type, iconClass);
                     if (document.getElementById('report-content')) {
                         document.getElementById('report-content').innerHTML = renderedMessage;
                         document.getElementById('report-content').className = 'markdown-body'; // Apply markdown styles
@@ -623,24 +874,25 @@
                         document.getElementById('overall-status').className = 'status-indicator completed';
                     }
                     break;
-                case 'finished':
-                    addSimpleLog(message);
-                    break;
                 case 'error':
                     title = '发生错误';
-                    processLogEntry(title, renderedMessage, 'error');
+                    type = 'error';
+                    iconClass = 'completed';
+                    processLogEntry(title, renderedMessage, type, iconClass);
                     if (document.getElementById('overall-status')) {
                         document.getElementById('overall-status').className = 'status-indicator error';
                     }
                     break;
                 default:
                     title = `${status}`;
-                    processLogEntry(title, renderedMessage, 'running');
+                    type = 'running';
+                    iconClass = 'pulsing';
+                    processLogEntry(title, renderedMessage, type, iconClass);
             }
         }
 
         // Add collapsible log entry
-        function processLogEntry(title, content, type) {
+        function processLogEntry(title, content, type, iconClass = 'pulsing') {
             const logContainer = document.getElementById('process-log');
 
             const details = document.createElement('details');
@@ -655,9 +907,19 @@
             if (type === 'error') iconColor = '#ef4444';
             if (type === 'info') iconColor = '#f59e0b';
 
+            // Icon display logic
+            let iconHtml = '';
+            if (iconClass === 'completed') {
+                // 完成状态显示对勾
+                iconHtml = `<span style="color: #4ade80; font-size: 16px; margin-right: 8px;">✓</span>`;
+            } else {
+                // 其他状态显示动态图标
+                iconHtml = `<span class="status-icon ${iconClass}"></span>`;
+            }
+
             summary.innerHTML = `
-                <div style="display: flex; align-items: center; gap: 10px;">
-                    <span style="width: 10px; height: 10px; border-radius: 50%; background: ${iconColor}; display: inline-block;"></span>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    ${iconHtml}
                     <span>${title}</span>
                 </div>
                 <span style="font-size: 0.8em; color: #999;">${new Date().toLocaleTimeString()}</span>
@@ -704,6 +966,48 @@
                 .catch(err => {
                     console.error('复制失败:', err);
                 });
+        }
+
+        // 生成Todo List HTML
+        function generateTodoListHTML(croppedImgs) {
+            if (!croppedImgs || !Array.isArray(croppedImgs)) {
+                return '';
+            }
+            
+            let html = `
+                <div class="todo-section" style="margin: 15px 0; padding: 15px; background: #f8f9fa; border-radius: 8px; border: 1px solid #e9ecef;">
+                    <h3 class="todo-title" style="font-size: 1.1em; margin-bottom: 15px; color: #333;">区域分析任务列表</h3>
+                    <ul class="todo-list">
+            `;
+            
+            // 生成todo list项
+            croppedImgs.forEach((img, index) => {
+                const isDone = img.is_done || false;
+                const statusClass = isDone ? 'completed' : 'pending';
+                const statusText = isDone ? '已完成' : '待分析';
+                const todoClass = isDone ? 'todo-item done' : 'todo-item';
+                
+                html += `
+                    <li class="${todoClass}" data-index="${index}">
+                        <input type="checkbox" class="todo-checkbox" ${isDone ? 'checked' : ''} disabled>
+                        <span class="todo-text">${img.description || `区域 ${index + 1}`}</span>
+                        <span class="todo-status ${statusClass}">${statusText}</span>
+                    </li>
+                `;
+            });
+            
+            html += `
+                    </ul>
+                </div>
+            `;
+            
+            return html;
+        }
+
+        // 更新Todo List
+        function updateTodoList() {
+            // 由于todo list是动态生成的，现在通过重新生成整个日志条目来更新
+            // 这个函数不再直接操作DOM，而是通过processStreamData重新生成日志
         }
     </script>
 </body>
