@@ -8,6 +8,9 @@ from chat_model.openai.langchain_model import model
 from entity.segment_agent_status import AgentStatus
 from logger import logs
 from PIL import Image
+import utils.img_convert as utils
+
+
 
 def tool_call(state: AgentState, config: Dict[str, Any]) -> Dict[str, Any]:
     """
@@ -44,7 +47,7 @@ def tool_call(state: AgentState, config: Dict[str, Any]) -> Dict[str, Any]:
     updated_messages = analysis_messages.copy()
     for tool_call in last_ai_message.tool_calls:
         function_name = tool_call['name']
-        function_args = tool_call['args']
+        function_args = tool_call['args'].copy()
         current_idx = state.get('current_img_idx', 0)
         logs.info(f"Calling tool: {function_name} with args: {function_args}")
         function_args["img"] = Image.open(state["cropped_imgs"][current_idx]["save_path"])
@@ -54,9 +57,21 @@ def tool_call(state: AgentState, config: Dict[str, Any]) -> Dict[str, Any]:
                 tool_function = TOOLS_MAPPING[function_name]
                 tool_result = tool_function(**function_args)
                 
+
+                # 处理图像结果
+                if type(tool_result) == Image.Image:
+                    tool_result = {
+                        "type": "image_url",
+                        "image_url": {
+                            "url": f"data:image/jpeg;base64,{utils.img_to_base64(tool_result)}"
+                        }
+                    }
+                else:
+                    tool_result = str(tool_result)
+
                 # 创建工具消息
                 tool_message = ToolMessage(
-                    content=str(tool_result),
+                    content=tool_result,
                     name=function_name,
                     tool_call_id=tool_call['id']
                 )
