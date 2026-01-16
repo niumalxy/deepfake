@@ -53,7 +53,7 @@ class RemoteSuperResolutionModel:
         if not self._check_availability():
             print("Remote super-resolution not available. Using high-quality interpolation as fallback.")
             width, height = img.size
-            return img.resize((width * scale, height * scale), Image.LANCZOS)
+            return img.resize((width * scale, height * scale), Image.Resampling.LANCZOS)
         
         try:
             img_base64 = self._image_to_base64(img)
@@ -93,7 +93,7 @@ class RemoteSuperResolutionModel:
             print("Falling back to high-quality interpolation")
         
         width, height = img.size
-        return img.resize((width * scale, height * scale), Image.LANCZOS)
+        return img.resize((width * scale, height * scale), Image.Resampling.LANCZOS)
     
     def super_resolution_save(self, img: Image.Image, output_path: str, scale: int = 4) -> None:
         """

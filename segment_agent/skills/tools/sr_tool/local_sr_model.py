@@ -65,7 +65,7 @@ class LocalSuperResolutionModel:
         if self.model is None:
             print("Local super-resolution model not available. Using high-quality interpolation as fallback.")
             width, height = img.size
-            return img.resize((width * scale, height * scale), Image.LANCZOS)
+            return img.resize((width * scale, height * scale), Image.Resampling.LANCZOS)
         
         try:
             img_np = np.array(img)
@@ -73,21 +73,23 @@ class LocalSuperResolutionModel:
             if len(img_np.shape) == 2:
                 img_np = cv2.cvtColor(img_np, cv2.COLOR_GRAY2BGR)
             elif img_np.shape[2] == 4:
-                img_np = cv2.cvtColor(img_np, cv2.COLOR_RGBA2BGR)
+                img_np = cv2.cvtColor(img_np, cv2.COLOR_RGBA2BGRA)
+                img_np = cv2.cvtColor(img_np, cv2.COLOR_BGRA2BGR)
             else:
                 img_np = cv2.cvtColor(img_np, cv2.COLOR_RGB2BGR)
             
             result = self.model.upsample(img_np)
             
             result = cv2.cvtColor(result, cv2.COLOR_BGR2RGB)
-            output_img = Image.fromarray(result)
+
+            output_img = Image.fromarray(result)  # Convert NumPy array back to PIL Image
             
             return output_img
         except Exception as e:
             print(f"Error during local super-resolution processing: {e}")
             print("Falling back to high-quality interpolation")
             width, height = img.size
-            return img.resize((width * scale, height * scale), Image.LANCZOS)
+            return img.resize((width * scale, height * scale), Image.Resampling.LANCZOS)
     
     def super_resolution_save(self, img: Image.Image, output_path: str, scale: int = 4) -> None:
         """

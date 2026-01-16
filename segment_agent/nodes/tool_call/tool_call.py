@@ -7,7 +7,7 @@ from segment_agent.skills.tools.registry import TOOLS_SCHEMA, TOOLS_MAPPING
 from chat_model.openai.langchain_model import model
 from entity.segment_agent_status import AgentStatus
 from logger import logs
-
+from PIL import Image
 
 def tool_call(state: AgentState, config: Dict[str, Any]) -> Dict[str, Any]:
     """
