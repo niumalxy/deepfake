@@ -23,6 +23,7 @@ def analyze_partial_image(state: AgentState, config: Dict[str, Any]) -> Dict[str
     logs.info("--- Analyzing Partial Image ---")
     
     cropped_imgs = state.get('cropped_imgs', [])
+    
     if not cropped_imgs:
         logs.warning("No cropped images to analyze")
         return {"status": AgentStatus.FINISHED}

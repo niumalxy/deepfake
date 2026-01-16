@@ -25,7 +25,7 @@ class AgentState(TypedDict):
     origin_img: Image.Image
     cropped_imgs: list[CroppedImg] = []    # 存切割后的图像路径
     cropping_imgs: list[CroppingImg] = []
-    current_img_idx: int = 0    # 当前正在处理的图像索引
+    current_img_idx: Annotated[int, lambda x, y: y]  # 当前正在处理的图像索引
     report: str = ""
 
     log_id: str = ""    # 日志id
