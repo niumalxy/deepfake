@@ -865,10 +865,47 @@
             try {
                 // Ensure message is string
                 if (typeof message === 'object') {
-                    renderedMessage = JSON.stringify(message, null, 2);
-                    renderedMessage = '```json\n' + renderedMessage + '\n```';
+                    // Check if it's the specific JSON format for content analysis
+                    if (isContentAnalysisFormat(message)) {
+                        renderedMessage = parseContentAnalysisJson(message);
+                    } else {
+                        renderedMessage = JSON.stringify(message, null, 2);
+                        renderedMessage = '```json\n' + renderedMessage + '\n```';
+                    }
+                } else if (typeof message === 'string') {
+                     // Try to parse string as JSON to check if it's content analysis format
+                     try {
+                         const parsed = JSON.parse(message);
+                         if (isContentAnalysisFormat(parsed)) {
+                             renderedMessage = parseContentAnalysisJson(parsed);
+                         } else {
+                             renderedMessage = marked.parse(message || '');
+                         }
+                     } catch (e) {
+                         // If direct parsing fails, try to extract JSON from the string
+                         try {
+                             // Look for JSON object in the string (between {} or [])
+                             const jsonMatch = message.match(/\{[\s\S]*\}/);
+                             if (jsonMatch) {
+                                 const extractedJson = jsonMatch[0];
+                                 const parsed = JSON.parse(extractedJson);
+                                 if (isContentAnalysisFormat(parsed)) {
+                                     renderedMessage = parseContentAnalysisJson(parsed);
+                                 } else {
+                                     renderedMessage = marked.parse(message || '');
+                                 }
+                             } else {
+                                 // If no JSON object found, treat as regular markdown
+                                 renderedMessage = marked.parse(message || '');
+                             }
+                         } catch (extractError) {
+                             // If extraction also fails, treat as regular markdown
+                             renderedMessage = marked.parse(message || '');
+                         }
+                     }
+                } else {
+                    renderedMessage = marked.parse(String(message || ''));
                 }
-                renderedMessage = marked.parse(renderedMessage || '');
             } catch (e) {
                 console.error("Markdown parsing failed", e);
             }
@@ -1183,6 +1220,68 @@
                     </ul>
                 </div>
             `;
+
+            return html;
+        }
+
+        // 检查是否是内容分析格式的JSON
+        function isContentAnalysisFormat(obj) {
+            // 检查对象是否至少有一个以"part_"开头的键，且值是对象，包含items、location、description字段
+            if (typeof obj !== 'object' || obj === null) {
+                return false;
+            }
+            
+            const keys = Object.keys(obj);
+            if (keys.length === 0) {
+                return false;
+            }
+            
+            // 检查是否有至少一个key符合part_x的格式 (支持中文和英文)
+            const partKeys = keys.filter(key => /^(part_|部分_)\d+$/.test(key));
+            if (partKeys.length === 0) {
+                return false;
+            }
+            
+            // 检查第一个part_x对应的值是否包含所需的字段
+            const firstPart = obj[partKeys[0]];
+            return typeof firstPart === 'object' && 
+                   firstPart !== null && 
+                   'items' in firstPart && 
+                   'location' in firstPart && 
+                   'description' in firstPart;
+        }
+
+        // 解析内容分析JSON格式并生成HTML
+        function parseContentAnalysisJson(jsonObj) {
+            const keys = Object.keys(jsonObj);
+            const partKeys = keys.filter(key => /^(part_|部分_)\d+$/.test(key)).sort((a, b) => {
+                // 按数字排序part_x (支持中文和英文)
+                const numA = parseInt(a.split('_')[1]);
+                const numB = parseInt(b.split('_')[1]);
+                return numA - numB;
+            });
+
+            let html = '<div class="content-analysis-results" style="margin: 10px 0; padding: 15px; background: #f8fafc; border-left: 4px solid #3b82f6; border-radius: 0 4px 4px 0;">';
+            html += '<h3 style="margin-top: 0; color: #1e293b; font-size: 1.1em;">图像内容分析结果</h3>';
+            html += '<ul style="list-style: none; padding-left: 0;">';
+
+            partKeys.forEach(key => {
+                const part = jsonObj[key];
+                html += '<li style="margin: 12px 0; padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">';
+                html += `<strong>${part.items || key}:</strong> `;
+                html += `<span style="color: #64748b;">${part.description || '未提供描述'}</span>`;
+                
+                if (part.location && Array.isArray(part.location) && part.location.length === 4) {
+                    html += `<div style="font-size: 0.85em; color: #94a3b8; margin-top: 5px;">`;
+                    html += `坐标: [${part.location.join(', ')}]`;
+                    html += `</div>`;
+                }
+                
+                html += '</li>';
+            });
+
+            html += '</ul>';
+            html += '</div>';
 
             return html;
         }
