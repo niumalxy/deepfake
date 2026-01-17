@@ -223,27 +223,26 @@ def _stream_segment_agent(img_base64: str, task_id: str):
                 continue
 
             elif node == "next_part":
-                # Yield task completion update
-                # current_img_idx_val is already updated to the next index
-                finished_idx = current_img_idx_val - 1
-                result_text = ""
-                if 0 <= finished_idx < len(current_cropped_imgs):
-                    is_done = current_cropped_imgs[finished_idx]["is_done"]
-                    result_text = current_cropped_imgs[finished_idx]["analysis_result"]
-                    if is_done:
-                        message = f"Part {finished_idx + 1} analysis completed: {result_text}"
-                else:
-                    message = f"Part {finished_idx + 1} analysis failed"
+                continue
+                # finished_idx = current_img_idx_val - 1
+                # result_text = ""
+                # if 0 <= finished_idx < len(current_cropped_imgs):
+                #     is_done = current_cropped_imgs[finished_idx]["is_done"]
+                #     result_text = current_cropped_imgs[finished_idx]["analysis_result"]
+                #     if is_done:
+                #         message = f"Part {finished_idx + 1} analysis completed: {result_text}"
+                # else:
+                #     message = f"Part {finished_idx + 1} analysis failed"
                 
-                yield json.dumps({
-                    "current_node": "图像区域分析",
-                    "status": "task_completed",
-                    "message": message,
-                    "is_done": is_done,
-                    "current_task": finished_idx + 1,
-                    "total_tasks": len(current_cropped_imgs),
-                    "cropped_imgs": current_cropped_imgs
-                }, ensure_ascii=False) + "\n"
+                # yield json.dumps({
+                #     "current_node": "图像区域分析",
+                #     "status": "task_completed",
+                #     "message": message,
+                #     "is_done": is_done,
+                #     "current_task": finished_idx + 1,
+                #     "total_tasks": len(current_cropped_imgs),
+                #     "cropped_imgs": current_cropped_imgs
+                # }, ensure_ascii=False) + "\n"
                 
             elif node == "report":
                 status = "summary" # Route to Analysis Report section
@@ -251,6 +250,11 @@ def _stream_segment_agent(img_base64: str, task_id: str):
                 # Get report content
                 if "report" in state:
                     message = state["report"]
+            elif node == "workflow_end":
+                yield json.dumps({
+                    "status": status, 
+                    "message": state["report"]
+                }, ensure_ascii=False) + "\n"
             else:
                 # General handling for other nodes
                 if "analysis_messages" in state and state["analysis_messages"]:

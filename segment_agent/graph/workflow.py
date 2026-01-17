@@ -83,6 +83,10 @@ def create_graph(task_id: str, img: Image.Image, use_chinese: bool = True):
     workflow.add_node("tool_call", functools.partial(tool_call, config=config))
     workflow.add_node("next_part", next_part)
     workflow.add_node("report", functools.partial(report, config=config))
+    workflow.add_node("workflow_end", lambda state: {
+        "status": AgentStatus.FINISHED,
+        "report": "No suspicious regions found."
+    })
     # 设置入口点
     workflow.set_entry_point("init")
 
@@ -95,7 +99,7 @@ def create_graph(task_id: str, img: Image.Image, use_chinese: bool = True):
         has_suspicious_regions,
         {
             "has_regions": "img_cropping",
-            "no_regions": END
+            "no_regions": "workflow_end"
         }
     )
     
