@@ -138,7 +138,7 @@ def _stream_segment_agent(img_base64: str, task_id: str):
     current_cropped_imgs = []
     current_img_idx_val = 0
     
-    for event in graph.stream(inputs):
+    for event in graph.stream(inputs, config={"recursion_limit": 50}):
         for node, state in event.items():
             status = node
             message = ""
@@ -151,6 +151,12 @@ def _stream_segment_agent(img_base64: str, task_id: str):
             
             # segment_agent的状态处理
             if node == "img_content":
+                # 先初始化前端展示状态
+                yield json.dumps({
+                        "current_node": "内容分析",
+                        "status": "img_content",
+                        "message": message
+                    }, ensure_ascii=False) + "\n"
                 message = "Extracting image content and identifying suspicious regions"
                 # Show inference process (model reasoning)
                 if "content_messages" in state and state["content_messages"]:
@@ -162,6 +168,8 @@ def _stream_segment_agent(img_base64: str, task_id: str):
                             message = f'<div style="font-size: 0.8em; color: #666;">{content}</div>'
                 yield json.dumps({
                         "current_node": "内容分析",
+                        "status": "img_content",
+                        "message": message
                     }, ensure_ascii=False) + "\n"
 
             elif node == "img_cropping":
@@ -169,7 +177,7 @@ def _stream_segment_agent(img_base64: str, task_id: str):
                 # 添加cropped_imgs到流式输出
                 if current_cropped_imgs:
                     yield json.dumps({
-                        "current_node": "局部提取 ()",
+                        "current_node": "局部提取",
                         "status": status, 
                         "message": message,
                         "cropped_imgs": current_cropped_imgs,
@@ -209,7 +217,7 @@ def _stream_segment_agent(img_base64: str, task_id: str):
                         "cropped_imgs": current_cropped_imgs,
                         "current_task": current_img_idx_val + 1,
                         "total_tasks": total_imgs
-                    }, ensure_ascii=False)
+                    }, ensure_ascii=False) + "\n"
                     continue
             elif node == "tool_call":
                 continue
@@ -229,11 +237,12 @@ def _stream_segment_agent(img_base64: str, task_id: str):
                 
                 yield json.dumps({
                     "current_node": "图像区域分析",
-                    "status": "task_completed", 
-                    "result": result_text,
-                    "cropped_imgs": current_cropped_imgs,
-                    "current_task": current_img_idx_val,
-                    "total_tasks": len(current_cropped_imgs)
+                    "status": "task_completed",
+                    "message": message,
+                    "is_done": is_done,
+                    "current_task": finished_idx + 1,
+                    "total_tasks": len(current_cropped_imgs),
+                    "cropped_imgs": current_cropped_imgs
                 }, ensure_ascii=False) + "\n"
                 
             elif node == "report":

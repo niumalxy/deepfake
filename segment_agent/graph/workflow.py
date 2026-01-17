@@ -100,7 +100,7 @@ def create_graph(task_id: str, img: Image.Image, use_chinese: bool = True):
     )
     
     workflow.add_edge("img_cropping", "img_part_analysis")
-    workflow.add_edge("img_part_analysis", "next_part")
+    workflow.add_edge("tool_call", "img_part_analysis")
     # 决定是否继续分析
     workflow.add_conditional_edges(
         "img_part_analysis",

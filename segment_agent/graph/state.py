@@ -21,11 +21,11 @@ class CroppedImg(TypedDict):
 class AgentState(TypedDict):
     status: Annotated[AgentStatus, lambda x, y: y]
     content_messages: Annotated[Sequence[BaseMessage], operator.add]
-    analysis_messages: Annotated[Sequence[BaseMessage], lambda x, y: y]
+    analysis_messages: Sequence[BaseMessage]
     origin_img: Image.Image
     cropped_imgs: list[CroppedImg] = []    # 存切割后的图像路径
     cropping_imgs: list[CroppingImg] = []
     current_img_idx: Annotated[int, lambda x, y: y]  # 当前正在处理的图像索引
     report: str = ""
-
+    tool_call_times: int = 0
     log_id: str = ""    # 日志id

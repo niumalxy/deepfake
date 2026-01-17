@@ -47,13 +47,17 @@ def analyze_partial_image(state: AgentState, config: Dict[str, Any]) -> Dict[str
         },
         {
             "type": "text",
-            "text": f"以下为当前区域的简要描述，你既可以选择参考，也可以选择不参考，注意不要过分关注：\n{desc}"
+            "text": f"这是你本次待检测区域的图像。以下是这个区域的简要描述，你既可以选择参考，也可以选择不参考，注意不要过分关注：\n{desc}"
         }]
         origin_img_content = [{
             "type": "image_url",
             "image_url": {
                 "url": f"data:image/jpeg;base64,{img_to_base64(state['origin_img'])}"
             }
+        },
+        {
+            "type": "text",
+            "text": f"这是完整图像，**并非你本次操作的图像**，仅供你检测时参考。"
         }]
         prompt = get_partial_image_analysis_prompt()
 
@@ -61,14 +65,14 @@ def analyze_partial_image(state: AgentState, config: Dict[str, Any]) -> Dict[str
         analysis_messages = state.get('analysis_messages', [])
         messages = [
             SystemMessage(content=prompt),
+            HumanMessage(content=origin_img_content),
             HumanMessage(content=content),
-            HumanMessage(content=origin_img_content)
         ]  if not analysis_messages else analysis_messages
         
         # 绑定工具到模型，使模型知道可以使用哪些工具
         bound_model = model.bind_tools(TOOLS_SCHEMA)
         response = bound_model.invoke(messages)
-        
+        logs.info("模型输出: " + response.content)
         return {
             "analysis_messages": messages + [response],
         }
@@ -82,5 +86,6 @@ def analyze_partial_image(state: AgentState, config: Dict[str, Any]) -> Dict[str
 
         return {
             "cropped_imgs": cropped_imgs,
-            "current_analysis_idx": next_idx
+            "current_analysis_idx": next_idx,
+            "tool_call_times": 0,
         }

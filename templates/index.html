@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Deepfake Agent Demo</title>
+    <title>Deepfake Detection Agent</title>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
         * {
@@ -151,6 +151,7 @@
             from {
                 transform: rotate(0deg);
             }
+
             to {
                 transform: rotate(360deg);
             }
@@ -158,22 +159,31 @@
 
         /* 闪烁动画 */
         @keyframes blink {
-            0%, 50%, 100% {
+
+            0%,
+            50%,
+            100% {
                 opacity: 1;
             }
-            25%, 75% {
+
+            25%,
+            75% {
                 opacity: 0.3;
             }
         }
 
         /* 摇摆动画 */
         @keyframes swing {
-            0%, 100% {
+
+            0%,
+            100% {
                 transform: rotate(0deg);
             }
+
             25% {
                 transform: rotate(15deg);
             }
+
             75% {
                 transform: rotate(-15deg);
             }
@@ -181,9 +191,12 @@
 
         /* 呼吸动画 */
         @keyframes breathe {
-            0%, 100% {
+
+            0%,
+            100% {
                 transform: scale(1);
             }
+
             50% {
                 transform: scale(1.2);
             }
@@ -194,6 +207,7 @@
             from {
                 width: 0;
             }
+
             to {
                 width: 100%;
             }
@@ -255,9 +269,15 @@
             animation: spin 1s linear infinite;
             background: transparent;
         }
+
         @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
         }
 
         .status-icon.completed {
@@ -368,7 +388,7 @@
             border-color: #d1d5db;
         }
 
-        .log-entry > summary {
+        .log-entry>summary {
             padding: 12px 15px;
             cursor: pointer;
             font-weight: 600;
@@ -382,22 +402,22 @@
             /* Hide default arrow */
         }
 
-        .log-entry > summary::-webkit-details-marker {
+        .log-entry>summary::-webkit-details-marker {
             display: none;
         }
 
-        .log-entry > summary:hover {
+        .log-entry>summary:hover {
             background: #f9fafb;
         }
 
-        .log-entry > summary:after {
+        .log-entry>summary:after {
             content: '+';
             font-size: 1.2em;
             color: #9ca3af;
             font-weight: normal;
         }
 
-        .log-entry[open] > summary:after {
+        .log-entry[open]>summary:after {
             content: '-';
         }
 
@@ -424,7 +444,7 @@
             cursor: pointer;
             list-style: none;
         }
-        
+
         .todo-summary::-webkit-details-marker {
             display: none;
         }
@@ -446,7 +466,8 @@
             border-radius: 0 0 8px 8px;
             font-size: 0.85em;
             color: #666;
-            margin-top: -5px; /* Pull up to connect with summary */
+            margin-top: -5px;
+            /* Pull up to connect with summary */
             margin-bottom: 5px;
         }
 
@@ -621,18 +642,19 @@
             <p>支持 JPG、PNG、WEBP 等格式</p>
             <button class="upload-btn" onclick="document.getElementById('file-input').click()">选择图片</button>
             <div id="file-name"></div>
-            
+
             <!-- Agent 选择 -->
             <div style="margin: 15px 0; padding: 15px 0; border-top: 1px solid #eee;">
                 <h4 style="color: #333; margin-bottom: 10px;">选择分析模式</h4>
                 <div style="display: flex; justify-content: center;">
-                    <select id="agent-type" name="agent-type" style="padding: 8px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 16px; color: #333; background: white;">
+                    <select id="agent-type" name="agent-type"
+                        style="padding: 8px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 16px; color: #333; background: white;">
                         <option value="standard" selected>标准模式</option>
                         <option value="segment">局部检测模式</option>
                     </select>
                 </div>
             </div>
-            
+
             <!-- 中文报告选项 -->
             <div style="margin: 10px 0;">
                 <label style="display: inline-flex; align-items: center; cursor: pointer;">
@@ -820,12 +842,12 @@
                     // Create a temp element to hold the html
                     const temp = document.createElement('div');
                     temp.innerHTML = checkmarkHtml;
-                    
+
                     // Replace the icon
                     if (iconContainer.className && iconContainer.className.includes('status-icon')) {
-                         iconContainer.parentNode.replaceChild(temp.firstChild, iconContainer);
+                        iconContainer.parentNode.replaceChild(temp.firstChild, iconContainer);
                     } else if (iconContainer.style && iconContainer.style.marginRight) {
-                         // Already a checkmark? or something else
+                        // Already a checkmark? or something else
                     }
                 }
                 runningTask.setAttribute('data-status', 'completed');
@@ -891,61 +913,65 @@
                     // 修复任务数量问题
                     if (cropped_imgs && Array.isArray(cropped_imgs)) {
                         actualTotalTasks = cropped_imgs.length;
-                        
+
                         // Count completed tasks
                         const completedCount = cropped_imgs.filter(img => img.is_done).length;
-                        
+
                         // 生成todo list HTML
                         todoListHTML = generateTodoListHTML(cropped_imgs);
-                        
+
                         const nodeName = current_node || '区域分析';
                         title = `${nodeName} (完成进度 ${completedCount}/${actualTotalTasks})`;
                     } else {
-                         const nodeName = current_node || '区域分析';
-                         title = `${nodeName} (任务 ${current_task || 1}/${total_tasks || '?'})`;
+                        const nodeName = current_node || '区域分析';
+                        title = `${nodeName} (任务 ${current_task || 1}/${total_tasks || '?'})`;
                     }
-                    
+
                     type = 'running';
                     iconClass = 'ring';
                     // 将todo list嵌入到日志内容中，且置顶
                     const contentWithTodo = todoListHTML + renderedMessage;
-                    processLogEntry(title, contentWithTodo, type, iconClass);
+                    // Use a unique ID for this task to allow updates
+                    const taskId = `task-${current_task || 1}`;
+                    processLogEntry(title, contentWithTodo, type, iconClass, taskId);
                     break;
                 case 'task_completed':
-                     // Update the last log entry
-                     const lastEntry = document.querySelector('#process-log .log-entry:last-child');
-                     if (lastEntry && lastEntry.getAttribute('data-status') === 'running') {
-                         // Update title
-                         const completedCount = cropped_imgs.filter(img => img.is_done).length;
-                         const titleSpan = lastEntry.querySelector('summary span:last-child'); // First span is icon wrapper? No, summary structure: div(icon, span(title)), span(time)
-                         // Structure: <div>icon, <span>title</span></div>
-                         const titleEl = lastEntry.querySelector('summary > div > span');
-                         if (titleEl) {
-                             const nodeName = current_node || '区域分析';
-                             titleEl.textContent = `${nodeName} (完成进度 ${completedCount}/${total_tasks})`;
-                         }
+                    // Update the specific log entry using ID
+                    const completedTaskId = `task-${current_task || 1}`;
+                    const lastEntry = document.getElementById(completedTaskId);
 
-                         // Re-generate Todo List
-                         todoListHTML = generateTodoListHTML(cropped_imgs);
-                         
-                         // Update content: Todo List + Analysis Result (Message)
-                         const contentDiv = lastEntry.querySelector('.details-content');
-                         // Wrap result in a nice box
-                         let resultHtml = `<div style="margin-top: 15px; padding: 15px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; color: #166534;"><strong>本区域分析结论：</strong><br>${renderedMessage}</div>`;
-                         
-                         contentDiv.innerHTML = todoListHTML + resultHtml;
-                         
-                         // Mark entry as completed
-                         const iconContainer = lastEntry.querySelector('.status-icon');
-                         if (iconContainer) {
-                             const checkmarkHtml = `<span style="color: #4ade80; font-size: 16px; margin-right: 8px;">✓</span>`;
-                             const temp = document.createElement('div');
-                             temp.innerHTML = checkmarkHtml;
-                             iconContainer.parentNode.replaceChild(temp.firstChild, iconContainer);
-                         }
-                         lastEntry.setAttribute('data-status', 'completed');
-                     }
-                     break;
+                    if (lastEntry) {
+                        // Update title
+                        const completedCount = cropped_imgs.filter(img => img.is_done).length;
+
+                        // Structure: <div>icon, <span>title</span></div>
+                        const titleEl = lastEntry.querySelector('summary > div > span');
+                        if (titleEl) {
+                            const nodeName = current_node || '区域分析';
+                            titleEl.textContent = `${nodeName} (完成进度 ${completedCount}/${total_tasks})`;
+                        }
+
+                        // Re-generate Todo List
+                        todoListHTML = generateTodoListHTML(cropped_imgs);
+
+                        // Update content: Todo List + Analysis Result (Message)
+                        const contentDiv = lastEntry.querySelector('.details-content');
+                        // Wrap result in a nice box
+                        let resultHtml = `<div style="margin-top: 15px; padding: 15px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; color: #166534;"><strong>本区域分析结论：</strong><br>${renderedMessage}</div>`;
+
+                        contentDiv.innerHTML = todoListHTML + resultHtml;
+
+                        // Mark entry as completed
+                        const iconContainer = lastEntry.querySelector('.status-icon');
+                        if (iconContainer) {
+                            const checkmarkHtml = `<span style="color: #4ade80; font-size: 16px; margin-right: 8px;">✓</span>`;
+                            const temp = document.createElement('div');
+                            temp.innerHTML = checkmarkHtml;
+                            iconContainer.parentNode.replaceChild(temp.firstChild, iconContainer);
+                        }
+                        lastEntry.setAttribute('data-status', 'completed');
+                    }
+                    break;
                 // Segment Agent 全局状态
                 case 'init':
                 case 'planning':
@@ -1012,12 +1038,26 @@
         }
 
         // Add collapsible log entry
-        function processLogEntry(title, content, type, iconClass = 'pulsing') {
+        function processLogEntry(title, content, type, iconClass = 'pulsing', entryId = null) {
             const logContainer = document.getElementById('process-log');
 
-            const details = document.createElement('details');
-            details.className = 'log-entry';
-            details.open = true; // Open new one by default
+            // Check if entry already exists
+            let details = null;
+            if (entryId) {
+                details = document.getElementById(entryId);
+            }
+
+            // Create new if not exists
+            if (!details) {
+                details = document.createElement('details');
+                details.className = 'log-entry';
+                if (entryId) details.id = entryId;
+                details.open = true; // Open new one by default
+
+                // Append to container immediately if new
+                logContainer.appendChild(details);
+            }
+
             details.setAttribute('data-status', type); // Set status for later updates
 
             const summary = document.createElement('summary');
@@ -1051,10 +1091,12 @@
             contentDiv.className = 'details-content markdown-body';
             contentDiv.innerHTML = content;
 
+            // Clear existing content and re-append
+            details.innerHTML = '';
             details.appendChild(summary);
             details.appendChild(contentDiv);
 
-            logContainer.appendChild(details);
+            // Auto-scroll only if new or at bottom
             logContainer.scrollTop = logContainer.scrollHeight;
         }
 
@@ -1095,20 +1137,20 @@
             if (!croppedImgs || !Array.isArray(croppedImgs)) {
                 return '';
             }
-            
+
             let html = `
                 <div class="todo-section" style="margin: 15px 0; padding: 15px; background: #f8f9fa; border-radius: 8px; border: 1px solid #e9ecef;">
                     <h3 class="todo-title" style="font-size: 1.1em; margin-bottom: 15px; color: #333;">区域分析任务列表</h3>
                     <ul class="todo-list">
             `;
-            
+
             // 生成todo list项
             croppedImgs.forEach((img, index) => {
                 const isDone = img.is_done || false;
                 const statusClass = isDone ? 'completed' : 'pending';
                 const statusText = isDone ? '已完成' : '待分析';
                 const todoClass = isDone ? 'todo-item done' : 'todo-item';
-                
+
                 // If done and has analysis result, make it collapsible
                 if (isDone && img.analysis_result) {
                     html += `
@@ -1136,12 +1178,12 @@
                     `;
                 }
             });
-            
+
             html += `
                     </ul>
                 </div>
             `;
-            
+
             return html;
         }
 

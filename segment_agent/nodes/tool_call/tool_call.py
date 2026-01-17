@@ -42,7 +42,13 @@ def tool_call(state: AgentState, config: Dict[str, Any]) -> Dict[str, Any]:
         logs.warning("No tool calls found in the messages")
         # 返回原状态继续分析
         return {"analysis_messages": analysis_messages}
-    
+
+    # 强制最多调用3次工具
+    tool_call_times = state.get("tool_call_times", 0) + 1
+    if tool_call_times >= 1:
+        logs.warning("Tool call times exceeds 1 times, stop calling tools")
+        return {"analysis_messages": analysis_messages + [SystemMessage(content="警告：工具调用不得超过1次，请勿重复调用tool_calls。")]}
+
     # 执行所有找到的工具调用
     updated_messages = analysis_messages.copy()
     for tool_call in last_ai_message.tool_calls:
@@ -57,7 +63,6 @@ def tool_call(state: AgentState, config: Dict[str, Any]) -> Dict[str, Any]:
                 tool_function = TOOLS_MAPPING[function_name]
                 tool_result = tool_function(**function_args)
                 
-
                 # 处理图像结果
                 if type(tool_result) == Image.Image:
                     tool_result = {
@@ -105,7 +110,7 @@ def tool_call(state: AgentState, config: Dict[str, Any]) -> Dict[str, Any]:
             )
             
             updated_messages.append(error_message)
-    
+        
     # 调用模型获取新的AI响应
     bound_model = model.bind_tools(TOOLS_SCHEMA)
     response = bound_model.invoke(updated_messages)
@@ -114,6 +119,7 @@ def tool_call(state: AgentState, config: Dict[str, Any]) -> Dict[str, Any]:
     updated_messages.append(response)
     
     return {
+        "tool_call_times": tool_call_times,
         "analysis_messages": updated_messages,
         "status": AgentStatus.ANALYZING  # 继续分析流程
     }

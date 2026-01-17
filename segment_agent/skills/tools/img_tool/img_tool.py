@@ -8,6 +8,17 @@ def crop_img(img, top_left, bottom_right):
     :param bottom_right: Bottom-right coordinates (x, y)
     :return: Cropped PIL.Image object
     """
+    width, height = img.size
+    
+    # Check for out of bounds
+    if (top_left[0] < 0 or top_left[1] < 0 or 
+        bottom_right[0] > width or bottom_right[1] > height):
+        raise ValueError(
+            f"Crop coordinates out of bounds. "
+            f"Image size is {width}x{height}, but requested crop is "
+            f"from {top_left} to {bottom_right}."
+        )
+
     return img.crop((top_left[0], top_left[1], bottom_right[0], bottom_right[1]))
 
 def resize_img(img, size=(256, 256)):
