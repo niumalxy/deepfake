@@ -76,6 +76,7 @@ def report(state: AgentState, config: Dict[str, Any]) -> Dict[str, Any]:
         generated_report = response.content
         
         logs.info("Final report generated successfully with model")
+        logs.info(f"Generated report content: {generated_report[:500]}...")  # 记录报告开头部分
         
         return {
             "report": generated_report,
