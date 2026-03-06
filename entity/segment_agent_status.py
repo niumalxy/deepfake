@@ -1,4 +1,5 @@
 from enum import Enum
+from sre_parse import IN
 from pydantic import BaseModel
 
 class AgentStatus(Enum):
@@ -10,4 +11,5 @@ class AgentStatus(Enum):
     REPORTING = "reporting"
     FINISHED = "finished"
     COMPLETED = "completed"
+    INVALID = "invalid"
 

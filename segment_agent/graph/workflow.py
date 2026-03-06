@@ -1,15 +1,18 @@
 import functools
 from PIL import Image
+from typing import Optional
 from segment_agent.nodes.img_content.img_content import extract_suspicious_regions
 from segment_agent.nodes.img_segment.img_segment import crop_image_by_coords
 from segment_agent.nodes.img_part_analysis.img_part_analysis import analyze_partial_image
 from segment_agent.nodes.next_part.next_part import next_part
 from segment_agent.nodes.tool_call.tool_call import tool_call
 from segment_agent.nodes.report.report import report
+from segment_agent.nodes.dump2db.save import dump2db
 from entity.segment_agent_status import AgentStatus
 from segment_agent.graph.state import AgentState
 from langgraph.graph import StateGraph, START, END
 from entity.segment_agent_config import SegmentAgentConfig
+
 
 def should_continue_analysis(state: AgentState) -> str:
     last_message = state["analysis_messages"][-1]
@@ -54,7 +57,7 @@ def have_next_part(state: AgentState) -> str:
         return "no"
     return "yes"
 
-def create_graph(task_id: str, img: Image.Image, use_chinese: bool = True):
+def create_graph(task_id: str, img: Image.Image, use_chinese: bool = True, label: Optional[tuple[int, str]] = None): # label取值为tuple, (int, str), 代表(类别, 描述)
     """
     创建segment_agent的工作流图
     
@@ -66,7 +69,7 @@ def create_graph(task_id: str, img: Image.Image, use_chinese: bool = True):
     Returns:
         编译后的工作流图
     """
-    config = SegmentAgentConfig(task_id=task_id, use_chinese=use_chinese)
+    config = SegmentAgentConfig(task_id=task_id, use_chinese=use_chinese, label=label)
     workflow = StateGraph(AgentState)
 
     # 添加节点
@@ -83,10 +86,7 @@ def create_graph(task_id: str, img: Image.Image, use_chinese: bool = True):
     workflow.add_node("tool_call", functools.partial(tool_call, config=config))
     workflow.add_node("next_part", next_part)
     workflow.add_node("report", functools.partial(report, config=config))
-    workflow.add_node("workflow_end", lambda state: {
-        "status": AgentStatus.FINISHED,
-        "report": "No suspicious regions found."
-    })
+    workflow.add_node("workflow_end", functools.partial(dump2db, config=config))
     # 设置入口点
     workflow.set_entry_point("init")
 
@@ -119,5 +119,6 @@ def create_graph(task_id: str, img: Image.Image, use_chinese: bool = True):
         "yes": "img_part_analysis",
         "no": "report"
     })
+    workflow.add_edge("report", "workflow_end")
 
     return workflow.compile()

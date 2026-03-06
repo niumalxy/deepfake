@@ -27,5 +27,6 @@ class AgentState(TypedDict):
     cropping_imgs: list[CroppingImg] = []
     current_img_idx: Annotated[int, lambda x, y: y]  # 当前正在处理的图像索引
     report: str = ""
+    prediction: str = ""
     tool_call_times: int = 0
     log_id: str = ""    # 日志id

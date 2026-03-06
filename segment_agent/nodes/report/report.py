@@ -88,5 +88,5 @@ def report(state: AgentState, config: Dict[str, Any]) -> Dict[str, Any]:
         # 如果模型调用失败，返回基本报告
         return {
             "report": "",
-            "status": AgentStatus.FINISHED,
+            "status": AgentStatus.INVALID,
         }
