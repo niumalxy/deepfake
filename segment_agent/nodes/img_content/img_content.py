@@ -4,7 +4,7 @@ import json
 from typing import Dict, Any
 from langchain_core.messages import HumanMessage, SystemMessage
 from segment_agent.graph.state import AgentState
-from segment_agent.nodes.img_content.prompt import IMAGE_ANALYSIS_PROMPT
+from segment_agent.nodes.img_content.prompt import get_image_analysis_prompt
 from chat_model.openai.langchain_model import model
 from entity.segment_agent_status import AgentStatus
 from logger import logs
@@ -46,7 +46,7 @@ def extract_suspicious_regions(state: AgentState, config: Dict[str, Any]):
     }]
     
     messages = [
-        SystemMessage(content=IMAGE_ANALYSIS_PROMPT),
+        SystemMessage(content=get_image_analysis_prompt()),
         HumanMessage(content=content)
     ]
     

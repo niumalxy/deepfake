@@ -21,7 +21,7 @@ def dump2db(state: AgentState, config: SegmentAgentConfig) -> None:
         state["prediction"] = "normal"
 
     # 如果结果正确，或状态为INVALID，暂时不分析
-    if ((state["prediction"] == "fake") ^ (config["label"][0] == 0)) or state["status"] == AgentStatus.INVALID:
+    if config["label"] is None or ((state["prediction"] == "fake") ^ (config["label"][0] == 0)) or state["status"] == AgentStatus.INVALID:
         return
 
     async def dump_analysis():
