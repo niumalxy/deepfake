@@ -382,6 +382,10 @@ if __name__ == "__main__":
     check_necessary_dir("segment_agent/plan/docs")
     check_necessary_dir("segment_agent/summary/docs")
 
+    # 数据分析agent
+    from reflection_agent.main import main as start_reflection_agent
+    start_reflection_agent()
+
     import uvicorn
     logs.info("Start deepfakeagentdemo! You can access it at http://localhost:8000")
     uvicorn.run(app, host="localhost", port=8000)

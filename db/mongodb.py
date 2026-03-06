@@ -24,3 +24,9 @@ def insert_analysis(analysis: Dict[str, Any]) -> None:
 
 def get_analysis(analysis_id: str) -> Dict[str, Any]:
     return analysis_db.find_one({"_id": analysis_id})
+
+def get_segment_by_task_id(task_id: str) -> Dict[str, Any]:
+    return segment_db.find_one({"task_id": task_id})
+
+def get_analysis_by_task_id(task_id: str) -> Dict[str, Any]:
+    return analysis_db.find_one({"task_id": task_id})
