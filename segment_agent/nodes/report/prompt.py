@@ -25,10 +25,10 @@ Do NOT just list the logs. Synthesize the information into a professional report
 
 CRITICAL OUTPUT FORMAT REQUIREMENT:
 Your entire final output strictly MUST follow exactly this format and contain nothing else outside of these tags:
-<report>text</report><prediction>0/1</prediction>
+<report>text</report><prediction>fake/normal</prediction>
 Where:
 - In <report>, output the full, detailed Markdown report text you synthesized.
-- In <prediction>, output exactly 1 if the image is determined to be a deepfake/forged, or 0 if the image is determined to be authentic/real.
+- In <prediction>, output exactly 'fake' if the image is determined to be a deepfake/forged, or 'normal' if the image is determined to be authentic/real.
 """
 
 def get_summary_system_prompt(use_chinese):
