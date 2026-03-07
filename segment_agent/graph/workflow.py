@@ -9,6 +9,8 @@ from segment_agent.skills.tool_call import execute_tool_call
 from segment_agent.nodes.report.report import report
 from segment_agent.nodes.dump2db.save import dump2db
 from entity.segment_agent_status import AgentStatus
+from segment_agent.nodes.rag.rag_node import rag_node
+from segment_agent.nodes.rag.rag_tool_call import rag_tool_call
 from segment_agent.graph.state import AgentState
 from langgraph.graph import StateGraph, START, END
 from entity.segment_agent_config import SegmentAgentConfig
@@ -39,6 +41,24 @@ def has_suspicious_regions(state: AgentState) -> str:
     if cropping_imgs:
         return "has_regions"
     return "no_regions"
+
+def should_continue_rag(state: AgentState) -> str:
+    """检查 RAG Node 是否产出了 tool_calls 或者表示完成判断"""
+    if not state.get("rag_messages"):
+        return "continue"
+    last_message = state["rag_messages"][-1]
+    if hasattr(last_message, 'tool_calls') and last_message.tool_calls:
+        return "tool_call"
+    content = getattr(last_message, 'content', '')
+    if "<continue>" in content:
+        return "continue"
+    # 默认让模型继续思考防死循环也可以设置限制
+    return "rag_node"
+
+def init_node_router(state: AgentState, config: SegmentAgentConfig) -> str:
+    if config.get("need_rag"):
+        return "rag"
+    return "no_rag"
 
 
 def have_next_part(state: AgentState) -> str:
@@ -78,8 +98,12 @@ def create_graph(task_id: str, img: Image.Image, use_chinese: bool = True, label
         "origin_img": img,
         "cropping_imgs": [],
         "cropped_imgs": [],
-        "current_analysis_idx": 0
+        "current_analysis_idx": 0,
+        "rag_messages": [],
+        "retrieved_context": ""
     })
+    workflow.add_node("rag_node", functools.partial(rag_node, config=config))
+    workflow.add_node("rag_tool_call", functools.partial(rag_tool_call, config=config))
     workflow.add_node("img_content", functools.partial(extract_suspicious_regions, config=config))
     workflow.add_node("img_cropping", functools.partial(crop_image_by_coords, config=config))
     workflow.add_node("img_part_analysis", functools.partial(analyze_partial_image, config=config))
@@ -90,8 +114,27 @@ def create_graph(task_id: str, img: Image.Image, use_chinese: bool = True, label
     # 设置入口点
     workflow.set_entry_point("init")
 
-    # 添加边
-    workflow.add_edge("init", "img_content")
+    # 添加边: 在 init 后根据 config 决定是否进 RAG
+    workflow.add_conditional_edges(
+        "init",
+        functools.partial(init_node_router, config=config),
+        {
+            "rag": "rag_node",
+            "no_rag": "img_content"
+        }
+    )
+    
+    # RAG节点内循环
+    workflow.add_conditional_edges(
+        "rag_node",
+        should_continue_rag,
+        {
+            "tool_call": "rag_tool_call",
+            "continue": "img_content",
+            "rag_node": "rag_node"
+        }
+    )
+    workflow.add_edge("rag_tool_call", "rag_node")
     
     # 检查是否有可疑区域
     workflow.add_conditional_edges(

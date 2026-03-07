@@ -6,4 +6,5 @@ class SegmentAgentConfig(TypedDict):
     img: Image.Image
     use_chinese: bool
     label: Any
+    need_rag: bool
         

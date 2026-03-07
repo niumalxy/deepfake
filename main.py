@@ -60,7 +60,7 @@ def _run_standard_agent(img_base64: str, use_chinese: bool, task_id: str):
     return report
 
 # segment_agent处理函数
-def _run_segment_agent(img_base64: str, task_id: str):
+def _run_segment_agent(img_base64: str, task_id: str, need_rag: bool = False):
     from segment_agent.graph import create_graph
     from PIL import Image
     import io
@@ -69,7 +69,7 @@ def _run_segment_agent(img_base64: str, task_id: str):
     # 将base64解码为图片对象
     img_bytes = base64.b64decode(img_base64)
     img = Image.open(io.BytesIO(img_bytes))
-    graph = create_graph(task_id=task_id, img=img)
+    graph = create_graph(task_id=task_id, img=img, need_rag=need_rag)
     inputs = {}
     result = graph.invoke(inputs)
     
@@ -123,7 +123,7 @@ def _stream_standard_agent(img_base64: str, use_chinese: bool, task_id: str):
     yield json.dumps({"status": "finished", "message": "Analysis complete"}, ensure_ascii=False) + "\n"
 
 # segment_agent流式处理函数
-def _stream_segment_agent(img_base64: str, task_id: str):
+def _stream_segment_agent(img_base64: str, task_id: str, need_rag: bool = False):
     from segment_agent.graph import create_graph
     from PIL import Image
     import io
@@ -132,7 +132,7 @@ def _stream_segment_agent(img_base64: str, task_id: str):
     # 将base64解码为图片对象
     img_bytes = base64.b64decode(img_base64)
     img = Image.open(io.BytesIO(img_bytes))
-    graph = create_graph(task_id=task_id, img=img)
+    graph = create_graph(task_id=task_id, img=img, need_rag=need_rag)
     inputs = {}
     
     current_cropped_imgs = []
@@ -150,7 +150,30 @@ def _stream_segment_agent(img_base64: str, task_id: str):
                 current_img_idx_val = state["current_img_idx"]
             
             # segment_agent的状态处理
-            if node == "img_content":
+            if node == "rag_node":
+                message = "Querying and analyzing historical deepfake cases (RAG)"
+                # Show inference process (model reasoning)
+                if "rag_messages" in state and state["rag_messages"]:
+                    last_msg = state["rag_messages"][-1]
+                    if hasattr(last_msg, 'content'):
+                        content = last_msg.content
+                        if isinstance(content, str):
+                            message = f'<div style="font-size: 0.8em; color: #666;">{content}</div>'
+                yield json.dumps({
+                        "current_node": "知识库检索",
+                        "status": "rag_node",
+                        "message": message
+                    }, ensure_ascii=False) + "\n"
+                    
+            elif node == "rag_tool_call":
+                message = "Executing FAISS vector database search..."
+                yield json.dumps({
+                        "current_node": "知识库检索",
+                        "status": "rag_tool_call",
+                        "message": message
+                    }, ensure_ascii=False) + "\n"
+                    
+            elif node == "img_content":
                 # 先初始化前端展示状态
                 yield json.dumps({
                         "current_node": "内容分析",
@@ -310,7 +333,7 @@ async def analyze_task_standard(file: UploadFile = File(...), use_chinese: bool 
 
 # segment_agent API端点
 @app.post("/api/task/segment")
-async def analyze_task_segment(file: UploadFile = File(...)):
+async def analyze_task_segment(file: UploadFile = File(...), need_rag: bool = False):
     from fastapi.concurrency import run_in_threadpool
     
     # 读取图片并转换为base64
@@ -320,7 +343,7 @@ async def analyze_task_segment(file: UploadFile = File(...)):
     task_id = _init_task("segment")
 
     try:
-        report = await run_in_threadpool(_run_segment_agent, img_base64, task_id)
+        report = await run_in_threadpool(_run_segment_agent, img_base64, task_id, need_rag)
         
         return {
             "code": 200, 
@@ -354,7 +377,7 @@ async def analyze_task_stream_standard(file: UploadFile = File(...), use_chinese
 
 # segment_agent流式API端点
 @app.post("/api/task/stream/segment")
-async def analyze_task_stream_segment(file: UploadFile = File(...)):
+async def analyze_task_stream_segment(file: UploadFile = File(...), need_rag: bool = False):
     # 读取图片并转换为base64
     img_base64 = await _read_file_to_base64(file)
     
@@ -363,7 +386,7 @@ async def analyze_task_stream_segment(file: UploadFile = File(...)):
 
     def stream_generator():
         #try:
-            yield from _stream_segment_agent(img_base64, task_id)
+            yield from _stream_segment_agent(img_base64, task_id, need_rag)
         #except Exception as e:
             #logs.error(f"Task {task_id} failed: {str(e)}")
             #yield json.dumps({"status": "error", "message": str(e)}, ensure_ascii=False) + "\n"

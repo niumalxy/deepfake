@@ -28,5 +28,7 @@ class AgentState(TypedDict):
     current_img_idx: Annotated[int, lambda x, y: y]  # 当前正在处理的图像索引
     report: str = ""
     prediction: str = ""
+    rag_messages: Annotated[Sequence[BaseMessage], operator.add]
+    retrieved_context: str = ""
     tool_call_times: int = 0
     log_id: str = ""    # 日志id
