@@ -20,10 +20,18 @@ Your report must constitute a cohesive narrative and include the following secti
 6. **Conclusion & Verdict**: A definitive conclusion based on the combined evidence from both partial analyses and complete image context. State the confidence level and explain how the integration of partial and complete image analysis affected the final determination.
 7. **Recommendations**: Suggested next steps or further forensic techniques if uncertainty remains.
 
-Format the output as clean, well-structured Markdown. Use headers, bullet points, and bold text to enhance readability.
-Do NOT just list the logs. Synthesize the information into a professional report."""
+Format the report text as clean, well-structured Markdown. Use headers, bullet points, and bold text to enhance readability.
+Do NOT just list the logs. Synthesize the information into a professional report.
+
+CRITICAL OUTPUT FORMAT REQUIREMENT:
+Your entire final output strictly MUST follow exactly this format and contain nothing else outside of these tags:
+<report>text</report><prediction>0/1</prediction>
+Where:
+- In <report>, output the full, detailed Markdown report text you synthesized.
+- In <prediction>, output exactly 1 if the image is determined to be a deepfake/forged, or 0 if the image is determined to be authentic/real.
+"""
 
 def get_summary_system_prompt(use_chinese):
     if use_chinese:
-        return SUMMARY_PROMPT + "\n最终报告请用中文输出。"
+        return SUMMARY_PROMPT + "\n<report>部分的内容请用中文输出。"
     return SUMMARY_PROMPT

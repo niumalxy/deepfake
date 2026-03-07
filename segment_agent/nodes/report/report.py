@@ -1,4 +1,5 @@
 from typing import Dict, Any
+import re
 from langchain_core.messages import HumanMessage, SystemMessage
 from segment_agent.graph.state import AgentState
 from entity.segment_agent_status import AgentStatus
@@ -78,8 +79,18 @@ def report(state: AgentState, config: Dict[str, Any]) -> Dict[str, Any]:
         logs.info("Final report generated successfully with model")
         logs.info(f"Generated report content: {generated_report[:500]}...")  # 记录报告开头部分
         
+        prediction_val = "0"
+        
+        # 提取 <prediction> 标签内容以供系统内部判断使用
+        prediction_match = re.search(r"<prediction>(.*?)</prediction>", generated_report, re.DOTALL)
+        
+        if prediction_match:
+            prediction_val = prediction_match.group(1).strip()
+        
+        # 即使提取了，报告本身还是保持带标签的完整内容，满足最终输出形式的要求
         return {
             "report": generated_report,
+            "prediction": prediction_val,
             "status": AgentStatus.FINISHED,
         }
     except Exception as e:

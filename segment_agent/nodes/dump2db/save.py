@@ -16,12 +16,13 @@ def dump2db(state: AgentState, config: SegmentAgentConfig) -> None:
         state: 工作流状态
         config: 配置参数
     """
-    # 如果没有可疑区域，需要补充normal标签
+    # 如果没有可疑区域，需要补充normal标签(用0表示)
     if not state["cropped_imgs"]:
-        state["prediction"] = "normal"
+        state["prediction"] = "0"
 
     # 如果结果正确，或状态为INVALID，暂时不分析
-    if config["label"] is None or ((state["prediction"] == "fake") ^ (config["label"][0] == 0)) or state["status"] == AgentStatus.INVALID:
+    # prediction 为 "1" 表示 fake，label[0] 为 1 也表示 fake
+    if config["label"] is None or ((state["prediction"] == "1") ^ (config["label"][0] == 0)) or state["status"] == AgentStatus.INVALID:
         return
 
     async def dump_analysis():

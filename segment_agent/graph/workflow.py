@@ -5,7 +5,7 @@ from segment_agent.nodes.img_content.img_content import extract_suspicious_regio
 from segment_agent.nodes.img_segment.img_segment import crop_image_by_coords
 from segment_agent.nodes.img_part_analysis.img_part_analysis import analyze_partial_image
 from segment_agent.nodes.next_part.next_part import next_part
-from segment_agent.nodes.tool_call.tool_call import tool_call
+from segment_agent.skills.tool_call import execute_tool_call
 from segment_agent.nodes.report.report import report
 from segment_agent.nodes.dump2db.save import dump2db
 from entity.segment_agent_status import AgentStatus
@@ -83,7 +83,7 @@ def create_graph(task_id: str, img: Image.Image, use_chinese: bool = True, label
     workflow.add_node("img_content", functools.partial(extract_suspicious_regions, config=config))
     workflow.add_node("img_cropping", functools.partial(crop_image_by_coords, config=config))
     workflow.add_node("img_part_analysis", functools.partial(analyze_partial_image, config=config))
-    workflow.add_node("tool_call", functools.partial(tool_call, config=config))
+    workflow.add_node("tool_call", functools.partial(execute_tool_call, config=config))
     workflow.add_node("next_part", next_part)
     workflow.add_node("report", functools.partial(report, config=config))
     workflow.add_node("workflow_end", functools.partial(dump2db, config=config))
