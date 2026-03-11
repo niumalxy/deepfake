@@ -24,7 +24,7 @@ def summarize(state: AgentState, config: AgentConfiguration):
     # Convert messages to a string representation for the LLM
     # We focus on the content of the messages
     messages = [
-        SystemMessage(content=get_summary_system_prompt()),
+        SystemMessage(content=get_summary_system_prompt(config.get('use_chinese', False))),
         HumanMessage(content=f"Here is the analysis log:\n\n")
     ]
     for msg in analysis_messages:

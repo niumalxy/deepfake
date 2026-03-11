@@ -17,5 +17,7 @@ Your report must constitute a cohesive narrative and include the following secti
 Format the output as clean, well-structured Markdown. Use headers, bullet points, and bold text to enhance readability.
 Do NOT just list the logs. Synthesize the information into a professional report."""
 
-def get_summary_system_prompt():
+def get_summary_system_prompt(use_chinese):
+    if use_chinese:
+        return SUMMARY_PROMPT + "\n最终报告请用中文输出。"
     return SUMMARY_PROMPT

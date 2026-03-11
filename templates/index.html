@@ -1,23 +1,25 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Deepfake Agent Demo</title>
+    <title>Deepfake Detection Agent</title>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
-        
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             padding: 20px;
         }
-        
+
         .container {
             max-width: 1000px;
             margin: 0 auto;
@@ -26,21 +28,21 @@
             padding: 30px;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
         }
-        
+
         h1 {
             text-align: center;
             color: #333;
             margin-bottom: 10px;
             font-size: 2.5em;
         }
-        
+
         .subtitle {
             text-align: center;
             color: #666;
             margin-bottom: 30px;
             font-size: 1.1em;
         }
-        
+
         .upload-section {
             background: #f8f9fa;
             border: 2px dashed #ddd;
@@ -50,22 +52,22 @@
             margin-bottom: 30px;
             transition: all 0.3s ease;
         }
-        
+
         .upload-section:hover {
             border-color: #667eea;
             background: #f0f2ff;
         }
-        
+
         .upload-section.dragover {
             border-color: #667eea;
             background: #e8ecff;
             transform: scale(1.02);
         }
-        
+
         #file-input {
             display: none;
         }
-        
+
         .upload-btn {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
@@ -77,32 +79,32 @@
             transition: all 0.3s ease;
             margin: 10px;
         }
-        
+
         .upload-btn:hover {
             transform: translateY(-2px);
             box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
         }
-        
+
         .upload-btn:active {
             transform: translateY(0);
         }
-        
+
         .upload-btn:disabled {
             opacity: 0.6;
             cursor: not-allowed;
             transform: none;
         }
-        
+
         #file-name {
             margin: 15px 0;
             font-weight: 500;
             color: #333;
         }
-        
+
         .process-section {
             margin-bottom: 30px;
         }
-        
+
         .section-title {
             font-size: 1.5em;
             color: #333;
@@ -111,104 +113,429 @@
             align-items: center;
             gap: 10px;
         }
-        
+
         .status-indicator {
             width: 12px;
             height: 12px;
             border-radius: 50%;
             background: #ddd;
         }
-        
+
         .status-indicator.running {
             background: #4ade80;
             animation: pulse 1.5s infinite;
         }
-        
+
         .status-indicator.completed {
             background: #667eea;
         }
-        
+
         .status-indicator.error {
             background: #ef4444;
         }
-        
+
         @keyframes pulse {
-            0%, 100% {
+
+            0%,
+            100% {
                 opacity: 1;
             }
+
             50% {
                 opacity: 0.5;
             }
         }
-        
-        #process-log {
+
+        /* 旋转动画 */
+        @keyframes rotate {
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* 闪烁动画 */
+        @keyframes blink {
+
+            0%,
+            50%,
+            100% {
+                opacity: 1;
+            }
+
+            25%,
+            75% {
+                opacity: 0.3;
+            }
+        }
+
+        /* 摇摆动画 */
+        @keyframes swing {
+
+            0%,
+            100% {
+                transform: rotate(0deg);
+            }
+
+            25% {
+                transform: rotate(15deg);
+            }
+
+            75% {
+                transform: rotate(-15deg);
+            }
+        }
+
+        /* 呼吸动画 */
+        @keyframes breathe {
+
+            0%,
+            100% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.2);
+            }
+        }
+
+        /* 打字机效果 */
+        @keyframes typing {
+            from {
+                width: 0;
+            }
+
+            to {
+                width: 100%;
+            }
+        }
+
+        /* 动态图标样式 */
+        .status-icon {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+
+        .status-icon.rotating {
+            background: #667eea;
+            border-radius: 50%;
+            animation: rotate 1.5s linear infinite;
+        }
+
+        .status-icon.pulsing {
+            background: #4ade80;
+            border-radius: 50%;
+            animation: pulse 1.5s infinite;
+        }
+
+        .status-icon.blinking {
+            background: #f59e0b;
+            border-radius: 50%;
+            animation: blink 1s infinite;
+        }
+
+        .status-icon.swinging {
+            background: #ec4899;
+            border-radius: 50%;
+            animation: swing 1s ease-in-out infinite;
+        }
+
+        .status-icon.breathing {
+            background: #8b5cf6;
+            border-radius: 50%;
+            animation: breathe 2s ease-in-out infinite;
+        }
+
+        .status-icon.typing {
+            background: #14b8a6;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            animation: blink 1s infinite;
+        }
+
+        .status-icon.ring {
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #667eea;
+            border-radius: 50%;
+            width: 16px;
+            height: 16px;
+            animation: spin 1s linear infinite;
+            background: transparent;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .status-icon.completed {
+            background: transparent;
+            color: #4ade80;
+            font-size: 16px;
+            content: '✓';
+        }
+
+        /* Todo list styles */
+        .todo-section {
             background: #f8f9fa;
-            border-radius: 8px;
+            border-radius: 12px;
             padding: 20px;
-            height: 300px;
-            overflow-y: auto;
-            font-family: 'Courier New', monospace;
-            font-size: 14px;
-            line-height: 1.6;
+            margin: 20px 0;
             border: 1px solid #e9ecef;
         }
-        
-        .log-entry {
-            margin-bottom: 10px;
-            padding: 8px 12px;
-            border-radius: 6px;
-            animation: slideIn 0.3s ease;
-        }
-        
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        
-        .log-entry.waiting {
-            background: #fef3c7;
-            border-left: 4px solid #f59e0b;
-        }
-        
-        .log-entry.running {
-            background: #d1fae5;
-            border-left: 4px solid #10b981;
-        }
-        
-        .log-entry.completed {
-            background: #dbeafe;
-            border-left: 4px solid #3b82f6;
-        }
-        
-        .log-entry.error {
-            background: #fee2e2;
-            border-left: 4px solid #ef4444;
-        }
-        
-        .log-time {
-            color: #666;
-            font-size: 12px;
-            margin-right: 10px;
-        }
-        
-        .log-status {
+
+        .todo-title {
+            font-size: 1.2em;
+            color: #333;
+            margin-bottom: 15px;
             font-weight: 600;
-            margin-right: 10px;
         }
-        
+
+        .todo-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .todo-item {
+            display: flex;
+            align-items: center;
+            padding: 10px 15px;
+            margin-bottom: 10px;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+            transition: all 0.3s ease;
+        }
+
+        .todo-item:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        .todo-item.done {
+            background: #f0fdf4;
+            border-color: #bbf7d0;
+        }
+
+        .todo-checkbox {
+            margin-right: 12px;
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: #4ade80;
+        }
+
+        .todo-text {
+            flex: 1;
+            color: #333;
+            transition: all 0.3s ease;
+        }
+
+        .todo-item.done .todo-text {
+            text-decoration: line-through;
+            color: #6b7280;
+        }
+
+        .todo-status {
+            font-size: 0.85em;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-weight: 500;
+        }
+
+        .todo-status.pending {
+            background: #fef3c7;
+            color: #d97706;
+        }
+
+        .todo-status.completed {
+            background: #d1fae5;
+            color: #059669;
+        }
+
+        #process-log {
+            background: #fff;
+            border-radius: 8px;
+            padding: 20px;
+            height: 500px;
+            overflow-y: auto;
+            border: 1px solid #e9ecef;
+        }
+
+        /* New Styles for Collapsible Logs */
+        .log-entry {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            overflow: hidden;
+            transition: all 0.2s;
+        }
+
+        .log-entry[open] {
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            border-color: #d1d5db;
+        }
+
+        .log-entry>summary {
+            padding: 12px 15px;
+            cursor: pointer;
+            font-weight: 600;
+            background: #fff;
+            user-select: none;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            color: #374151;
+            list-style: none;
+            /* Hide default arrow */
+        }
+
+        .log-entry>summary::-webkit-details-marker {
+            display: none;
+        }
+
+        .log-entry>summary:hover {
+            background: #f9fafb;
+        }
+
+        .log-entry>summary:after {
+            content: '+';
+            font-size: 1.2em;
+            color: #9ca3af;
+            font-weight: normal;
+        }
+
+        .log-entry[open]>summary:after {
+            content: '-';
+        }
+
+        .details-content {
+            padding: 15px;
+            border-top: 1px solid #e9ecef;
+            background: #fff;
+            overflow-x: auto;
+        }
+
+        /* Todo Details Styles */
+        .todo-details {
+            width: 100%;
+        }
+
+        .todo-summary {
+            display: flex;
+            align-items: center;
+            padding: 10px 15px;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            list-style: none;
+        }
+
+        .todo-summary::-webkit-details-marker {
+            display: none;
+        }
+
+        .todo-summary:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        .todo-item.done .todo-summary {
+            background: #f0fdf4;
+            border-color: #bbf7d0;
+        }
+
+        .todo-analysis-result {
+            padding: 15px;
+            background: #fafafa;
+            border: 1px solid #e9ecef;
+            border-top: none;
+            border-radius: 0 0 8px 8px;
+            font-size: 0.85em;
+            color: #666;
+            margin-top: -5px;
+            /* Pull up to connect with summary */
+            margin-bottom: 5px;
+        }
+
+        /* Markdown Content Styles */
+        .markdown-body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+            font-size: 14px;
+            line-height: 1.6;
+            color: #24292f;
+        }
+
+        .markdown-body h1,
+        .markdown-body h2,
+        .markdown-body h3 {
+            margin-top: 24px;
+            margin-bottom: 16px;
+            font-weight: 600;
+            line-height: 1.25;
+        }
+
+        .markdown-body p {
+            margin-bottom: 16px;
+        }
+
+        .markdown-body code {
+            padding: 0.2em 0.4em;
+            margin: 0;
+            font-size: 85%;
+            background-color: rgba(175, 184, 193, 0.2);
+            border-radius: 6px;
+            font-family: ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, Liberation Mono, monospace;
+        }
+
+        .markdown-body pre {
+            padding: 16px;
+            overflow: auto;
+            font-size: 85%;
+            line-height: 1.45;
+            background-color: #f6f8fa;
+            border-radius: 6px;
+            margin-bottom: 16px;
+        }
+
+        .markdown-body pre code {
+            background-color: transparent;
+            padding: 0;
+        }
+
+        .markdown-body ul,
+        .markdown-body ol {
+            padding-left: 2em;
+            margin-bottom: 16px;
+        }
+
+        .markdown-body blockquote {
+            padding: 0 1em;
+            color: #656d76;
+            border-left: 0.25em solid #d0d7de;
+            margin: 0 0 16px 0;
+        }
+
         .report-section {
             background: #f8f9fa;
             border-radius: 12px;
             padding: 25px;
             border: 1px solid #e9ecef;
         }
-        
+
         #report-content {
             margin-top: 15px;
             background: white;
@@ -219,13 +546,13 @@
             min-height: 200px;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
         }
-        
+
         .report-content.empty {
             color: #999;
             text-align: center;
             padding: 60px 20px;
         }
-        
+
         .copy-btn {
             background: #10b981;
             color: white;
@@ -237,16 +564,16 @@
             margin-top: 15px;
             transition: all 0.3s ease;
         }
-        
+
         .copy-btn:hover {
             background: #059669;
             transform: translateY(-1px);
         }
-        
+
         .copy-btn:active {
             transform: translateY(0);
         }
-        
+
         .copy-notification {
             background: #10b981;
             color: white;
@@ -259,54 +586,55 @@
             opacity: 0;
             transition: opacity 0.3s ease;
         }
-        
+
         .copy-notification.show {
             opacity: 1;
         }
-        
+
         /* 滚动条样式 */
         #process-log::-webkit-scrollbar {
             width: 8px;
         }
-        
+
         #process-log::-webkit-scrollbar-track {
             background: #f1f1f1;
             border-radius: 4px;
         }
-        
+
         #process-log::-webkit-scrollbar-thumb {
             background: #c1c1c1;
             border-radius: 4px;
         }
-        
+
         #process-log::-webkit-scrollbar-thumb:hover {
             background: #a1a1a1;
         }
-        
+
         @media (max-width: 768px) {
             .container {
                 padding: 20px;
             }
-            
+
             h1 {
                 font-size: 2em;
             }
-            
+
             .upload-section {
                 padding: 20px;
             }
-            
+
             #process-log {
-                height: 200px;
+                height: 300px;
             }
         }
     </style>
 </head>
+
 <body>
     <div class="container">
-        <h1>Deepfake Agent Demo</h1>
+        <h1>Deepfake Detection Agent</h1>
         <p class="subtitle">上传图片进行深度伪造分析，实时查看分析流程</p>
-        
+
         <!-- 上传区域 -->
         <div class="upload-section" id="upload-section">
             <input type="file" id="file-input" accept="image/*">
@@ -314,9 +642,29 @@
             <p>支持 JPG、PNG、WEBP 等格式</p>
             <button class="upload-btn" onclick="document.getElementById('file-input').click()">选择图片</button>
             <div id="file-name"></div>
+
+            <!-- Agent 选择 -->
+            <div style="margin: 15px 0; padding: 15px 0; border-top: 1px solid #eee;">
+                <h4 style="color: #333; margin-bottom: 10px;">选择分析模式</h4>
+                <div style="display: flex; justify-content: center;">
+                    <select id="agent-type" name="agent-type"
+                        style="padding: 8px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 16px; color: #333; background: white;">
+                        <option value="standard" selected>标准模式</option>
+                        <option value="segment">局部检测模式</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- 中文报告选项 -->
+            <div style="margin: 10px 0;">
+                <label style="display: inline-flex; align-items: center; cursor: pointer;">
+                    <input type="checkbox" id="use-chinese" style="margin-right: 8px; width: 16px; height: 16px;">
+                    <span style="color: #666;">生成中文报告</span>
+                </label>
+            </div>
             <button class="upload-btn" id="upload-btn" disabled>开始分析</button>
         </div>
-        
+
         <!-- 任务流程区域 -->
         <div class="process-section">
             <h2 class="section-title">
@@ -325,7 +673,9 @@
             </h2>
             <div id="process-log"></div>
         </div>
-        
+
+
+
         <!-- 报告区域 -->
         <div class="report-section">
             <h2 class="section-title">分析报告</h2>
@@ -335,49 +685,49 @@
             <button class="copy-btn" id="copy-btn" onclick="copyReport()" style="display: none;">复制报告</button>
         </div>
     </div>
-    
+
     <!-- 复制成功通知 -->
     <div class="copy-notification" id="copy-notification">
         报告已复制到剪贴板
     </div>
-    
+
     <script>
         // 全局变量
         let selectedFile = null;
         let isUploading = false;
-        
+
         // 初始化事件监听
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             const fileInput = document.getElementById('file-input');
             const uploadBtn = document.getElementById('upload-btn');
             const uploadSection = document.getElementById('upload-section');
-            
+
             // 文件选择事件
-            fileInput.addEventListener('change', function(e) {
+            fileInput.addEventListener('change', function (e) {
                 if (e.target.files.length > 0) {
                     selectedFile = e.target.files[0];
                     document.getElementById('file-name').textContent = `已选择: ${selectedFile.name}`;
                     uploadBtn.disabled = false;
                 }
             });
-            
+
             // 上传按钮点击事件
             uploadBtn.addEventListener('click', uploadFile);
-            
+
             // 拖拽事件处理
-            uploadSection.addEventListener('dragover', function(e) {
+            uploadSection.addEventListener('dragover', function (e) {
                 e.preventDefault();
                 this.classList.add('dragover');
             });
-            
-            uploadSection.addEventListener('dragleave', function() {
+
+            uploadSection.addEventListener('dragleave', function () {
                 this.classList.remove('dragover');
             });
-            
-            uploadSection.addEventListener('drop', function(e) {
+
+            uploadSection.addEventListener('drop', function (e) {
                 e.preventDefault();
                 this.classList.remove('dragover');
-                
+
                 if (e.dataTransfer.files.length > 0) {
                     selectedFile = e.dataTransfer.files[0];
                     document.getElementById('file-name').textContent = `已选择: ${selectedFile.name}`;
@@ -385,59 +735,74 @@
                 }
             });
         });
-        
+
         // 上传文件
         async function uploadFile() {
             if (!selectedFile || isUploading) return;
-            
+
             isUploading = true;
             const uploadBtn = document.getElementById('upload-btn');
             const overallStatus = document.getElementById('overall-status');
-            
+
             // 更新UI状态
             uploadBtn.disabled = true;
             uploadBtn.textContent = '分析中...';
             overallStatus.className = 'status-indicator running';
-            
+
             // 清空之前的日志和报告
             document.getElementById('process-log').innerHTML = '';
             document.getElementById('report-content').innerHTML = '分析中，请稍候...';
             document.getElementById('report-content').className = '';
             document.getElementById('copy-btn').style.display = 'none';
-            
+
             // 添加开始日志
-            addLogEntry('info', '开始分析图片...');
-            
+            processLogEntry('系统消息', '开始分析图片...', 'info');
+
             try {
                 // 创建FormData
                 const formData = new FormData();
                 formData.append('file', selectedFile);
-                
+
+                // 获取所选的agent类型
+                const selectedAgent = document.getElementById('agent-type').value;
+                // Add language option
+                const useChinese = document.getElementById('use-chinese').checked;
+
                 // 发送请求
-                const response = await fetch('/api/task/stream', {
+                let url;
+                // 根据选择的agent类型构建不同的API URL
+                if (selectedAgent === 'standard') {
+                    url = new URL('/api/task/stream/standard', window.location.href);
+                    url.searchParams.append('use_chinese', useChinese);
+                } else {
+                    // segment agent
+                    url = new URL('/api/task/stream/segment', window.location.href);
+                }
+
+                const response = await fetch(url.toString(), {
                     method: 'POST',
                     body: formData
                 });
-                
+
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
-                
+
                 // 处理流式响应
                 const reader = response.body.getReader();
                 const decoder = new TextDecoder('utf-8');
                 let buffer = '';
-                
+
                 while (true) {
                     const { done, value } = await reader.read();
                     if (done) break;
-                    
+
                     buffer += decoder.decode(value, { stream: true });
-                    
+
                     // 处理每一行JSON
                     const lines = buffer.split('\n');
                     buffer = lines.pop(); // 保留不完整的行
-                    
+
                     for (const line of lines) {
                         if (line.trim()) {
                             const data = JSON.parse(line);
@@ -445,15 +810,15 @@
                         }
                     }
                 }
-                
+
                 // 处理最后一行
                 if (buffer.trim()) {
                     const data = JSON.parse(buffer);
                     processStreamData(data);
                 }
-                
+
             } catch (error) {
-                addLogEntry('error', `分析失败: ${error.message}`);
+                processLogEntry('分析失败', error.message, 'error');
                 document.getElementById('report-content').innerHTML = `分析失败: ${error.message}`;
                 overallStatus.className = 'status-indicator error';
             } finally {
@@ -461,83 +826,333 @@
                 uploadBtn.textContent = '开始分析';
             }
         }
-        
+
         // 处理流式数据
         function processStreamData(data) {
-            const { status, message } = data;
-            
+            const { status, message, current_task, total_tasks, cropped_imgs, current_node } = data;
+
+            // Mark previous running task as completed
+            const runningTask = document.querySelector('#process-log .log-entry[data-status="running"]');
+            if (runningTask) {
+                // Change icon to completed checkmark
+                const iconContainer = runningTask.querySelector('.status-icon') || runningTask.querySelector('div > span:first-child');
+                if (iconContainer) {
+                    // Replace with checkmark
+                    const checkmarkHtml = `<span style="color: #4ade80; font-size: 16px; margin-right: 8px;">✓</span>`;
+                    // Create a temp element to hold the html
+                    const temp = document.createElement('div');
+                    temp.innerHTML = checkmarkHtml;
+
+                    // Replace the icon
+                    if (iconContainer.className && iconContainer.className.includes('status-icon')) {
+                        iconContainer.parentNode.replaceChild(temp.firstChild, iconContainer);
+                    } else if (iconContainer.style && iconContainer.style.marginRight) {
+                        // Already a checkmark? or something else
+                    }
+                }
+                runningTask.setAttribute('data-status', 'completed');
+            }
+
+            // Auto collapse previous details when a new distinct status comes
+            // But we might want to keep the immediate previous one open if it's related?
+            // "When a node ends, it should support collapsing"
+            // Let's just collapse all previous ones to focus on the new one.
+            const allDetails = document.querySelectorAll('#process-log .log-entry[open]');
+            allDetails.forEach(detail => detail.removeAttribute('open'));
+
+            // Render markdown content
+            let renderedMessage = message;
+            try {
+                // Ensure message is string
+                if (typeof message === 'object') {
+                    // Check if it's the specific JSON format for content analysis
+                    if (isContentAnalysisFormat(message)) {
+                        renderedMessage = parseContentAnalysisJson(message);
+                    } else {
+                        renderedMessage = JSON.stringify(message, null, 2);
+                        renderedMessage = '```json\n' + renderedMessage + '\n```';
+                    }
+                } else if (typeof message === 'string') {
+                     // Try to parse string as JSON to check if it's content analysis format
+                     try {
+                         const parsed = JSON.parse(message);
+                         if (isContentAnalysisFormat(parsed)) {
+                             renderedMessage = parseContentAnalysisJson(parsed);
+                         } else {
+                             renderedMessage = marked.parse(message || '');
+                         }
+                     } catch (e) {
+                         // If direct parsing fails, try to extract JSON from the string
+                         try {
+                             // Look for JSON object in the string (between {} or [])
+                             const jsonMatch = message.match(/\{[\s\S]*\}/);
+                             if (jsonMatch) {
+                                 const extractedJson = jsonMatch[0];
+                                 const parsed = JSON.parse(extractedJson);
+                                 if (isContentAnalysisFormat(parsed)) {
+                                     renderedMessage = parseContentAnalysisJson(parsed);
+                                 } else {
+                                     renderedMessage = marked.parse(message || '');
+                                 }
+                             } else {
+                                 // If no JSON object found, treat as regular markdown
+                                 renderedMessage = marked.parse(message || '');
+                             }
+                         } catch (extractError) {
+                             // If extraction also fails, treat as regular markdown
+                             renderedMessage = marked.parse(message || '');
+                         }
+                     }
+                } else {
+                    renderedMessage = marked.parse(String(message || ''));
+                }
+            } catch (e) {
+                console.error("Markdown parsing failed", e);
+            }
+
+            let title = '';
+            let type = 'running';
+            let iconClass = '';
+
+            // Segment Agent 状态映射
+            const segmentAgentStatusMap = {
+                'init': { title: '初始化', icon: 'ring', type: 'running' },
+                'planning': { title: '分析规划', icon: 'ring', type: 'running' },
+                'analyzing': { title: '图像分析', icon: 'ring', type: 'running' },
+                'executing_tool': { title: '工具执行', icon: 'ring', type: 'running' },
+                'reflecting': { title: '结果反思', icon: 'ring', type: 'running' },
+                'reporting': { title: '生成报告', icon: 'ring', type: 'running' },
+                'finished': { title: '分析完成', icon: 'completed', type: 'completed' },
+                'completed': { title: '任务完成', icon: 'completed', type: 'completed' }
+            };
+
+            // 保存cropped_imgs，用于后续生成todo list
+            let todoListHTML = '';
+            let actualTotalTasks = total_tasks;
+            let actualCurrentTask = current_task;
+
+            // Node 状态映射
             switch (status) {
+                // Segment Agent 节点状态
                 case 'img_content':
-                    addLogEntry('running', '正在提取图片内容...');
+                    title = current_node || '图片内容提取';
+                    type = 'completed';
+                    iconClass = 'completed';
+                    processLogEntry(title, renderedMessage, type, iconClass);
                     break;
+                case 'img_cropping':
+                    title = current_node || '图像分割';
+                    type = 'completed';
+                    iconClass = 'completed';
+                    processLogEntry(title, renderedMessage, type, iconClass);
+                    break;
+                case 'img_part_analysis':
+                    // 修复任务数量问题
+                    if (cropped_imgs && Array.isArray(cropped_imgs)) {
+                        actualTotalTasks = cropped_imgs.length;
+
+                        // Count completed tasks
+                        const completedCount = cropped_imgs.filter(img => img.is_done).length;
+
+                        // 生成todo list HTML
+                        todoListHTML = generateTodoListHTML(cropped_imgs);
+
+                        const nodeName = current_node || '区域分析';
+                        title = `${nodeName} (完成进度 ${completedCount}/${actualTotalTasks})`;
+                    } else {
+                        const nodeName = current_node || '区域分析';
+                        title = `${nodeName} (任务 ${current_task || 1}/${total_tasks || '?'})`;
+                    }
+
+                    type = 'running';
+                    iconClass = 'ring';
+                    // 将todo list嵌入到日志内容中，且置顶
+                    const contentWithTodo = todoListHTML + renderedMessage;
+                    // Use a unique ID for this task to allow updates
+                    const taskId = `task-${current_task || 1}`;
+                    processLogEntry(title, contentWithTodo, type, iconClass, taskId);
+                    break;
+                case 'task_completed':
+                    // Update the specific log entry using ID
+                    const completedTaskId = `task-${current_task || 1}`;
+                    const lastEntry = document.getElementById(completedTaskId);
+
+                    if (lastEntry) {
+                        // Update title
+                        const completedCount = cropped_imgs.filter(img => img.is_done).length;
+
+                        // Structure: <div>icon, <span>title</span></div>
+                        const titleEl = lastEntry.querySelector('summary > div > span');
+                        if (titleEl) {
+                            const nodeName = current_node || '区域分析';
+                            titleEl.textContent = `${nodeName} (完成进度 ${completedCount}/${total_tasks})`;
+                        }
+
+                        // Re-generate Todo List
+                        todoListHTML = generateTodoListHTML(cropped_imgs);
+
+                        // Update content: Todo List + Analysis Result (Message)
+                        const contentDiv = lastEntry.querySelector('.details-content');
+                        // Wrap result in a nice box
+                        let resultHtml = `<div style="margin-top: 15px; padding: 15px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; color: #166534;"><strong>本区域分析结论：</strong><br>${renderedMessage}</div>`;
+
+                        contentDiv.innerHTML = todoListHTML + resultHtml;
+
+                        // Mark entry as completed
+                        const iconContainer = lastEntry.querySelector('.status-icon');
+                        if (iconContainer) {
+                            const checkmarkHtml = `<span style="color: #4ade80; font-size: 16px; margin-right: 8px;">✓</span>`;
+                            const temp = document.createElement('div');
+                            temp.innerHTML = checkmarkHtml;
+                            iconContainer.parentNode.replaceChild(temp.firstChild, iconContainer);
+                        }
+                        lastEntry.setAttribute('data-status', 'completed');
+                    }
+                    break;
+                // Segment Agent 全局状态
+                case 'init':
+                case 'planning':
+                case 'analyzing':
+                case 'executing_tool':
+                case 'reflecting':
+                case 'reporting':
+                case 'finished':
+                case 'completed':
+                    const statusInfo = segmentAgentStatusMap[status];
+                    title = statusInfo.title;
+                    type = statusInfo.type;
+                    iconClass = statusInfo.icon;
+                    processLogEntry(title, renderedMessage, type, iconClass);
+                    break;
+                // 其他状态
                 case 'plan':
-                    addLogEntry('running', `正在生成分析计划: ${message}`);
+                    title = '分析计划';
+                    type = 'completed';
+                    iconClass = 'completed';
+                    processLogEntry(title, renderedMessage, type, iconClass);
                     break;
                 case 'tasks':
-                    addLogEntry('running', message);
+                    title = '生成任务列表';
+                    type = 'completed';
+                    iconClass = 'completed';
+                    processLogEntry(title, renderedMessage, type, iconClass);
                     break;
                 case 'analysis':
-                    addLogEntry('running', `正在分析: ${message}`);
+                    title = `执行分析 (任务 ${current_task}/${total_tasks})`;
+                    type = 'running';
+                    iconClass = 'ring';
+                    processLogEntry(title, renderedMessage, type, iconClass);
                     break;
                 case 'summary':
-                    addLogEntry('completed', '分析完成，正在生成报告...');
-                    document.getElementById('report-content').innerHTML = message;
-                    document.getElementById('copy-btn').style.display = 'inline-block';
-                    document.getElementById('overall-status').className = 'status-indicator completed';
-                    break;
-                case 'finished':
-                    addLogEntry('completed', message);
+                    title = '生成分析报告';
+                    type = 'completed';
+                    iconClass = 'completed';
+                    processLogEntry(title, renderedMessage, type, iconClass);
+                    if (document.getElementById('report-content')) {
+                        document.getElementById('report-content').innerHTML = renderedMessage;
+                        document.getElementById('report-content').className = 'markdown-body'; // Apply markdown styles
+                        document.getElementById('copy-btn').style.display = 'inline-block';
+                    }
+                    if (document.getElementById('overall-status')) {
+                        document.getElementById('overall-status').className = 'status-indicator completed';
+                    }
                     break;
                 case 'error':
-                    addLogEntry('error', message);
-                    document.getElementById('overall-status').className = 'status-indicator error';
+                    title = '发生错误';
+                    type = 'error';
+                    iconClass = 'completed';
+                    processLogEntry(title, renderedMessage, type, iconClass);
+                    if (document.getElementById('overall-status')) {
+                        document.getElementById('overall-status').className = 'status-indicator error';
+                    }
                     break;
                 default:
-                    addLogEntry('running', `${status}: ${message}`);
+                    title = `${status}`;
+                    type = 'running';
+                    iconClass = 'ring';
+                    processLogEntry(title, renderedMessage, type, iconClass);
             }
         }
-        
-        // 添加日志条目
-        function addLogEntry(type, message) {
+
+        // Add collapsible log entry
+        function processLogEntry(title, content, type, iconClass = 'pulsing', entryId = null) {
             const logContainer = document.getElementById('process-log');
-            const logEntry = document.createElement('div');
-            
-            const now = new Date();
-            const timeStr = now.toLocaleTimeString();
-            
-            let statusClass = 'waiting';
-            let statusText = '等待';
-            
-            switch (type) {
-                case 'running':
-                    statusClass = 'running';
-                    statusText = '运行中';
-                    break;
-                case 'completed':
-                    statusClass = 'completed';
-                    statusText = '完成';
-                    break;
-                case 'error':
-                    statusClass = 'error';
-                    statusText = '错误';
-                    break;
-                case 'info':
-                    statusClass = 'waiting';
-                    statusText = '信息';
-                    break;
+
+            // Check if entry already exists
+            let details = null;
+            if (entryId) {
+                details = document.getElementById(entryId);
             }
-            
-            logEntry.className = `log-entry ${statusClass}`;
-            logEntry.innerHTML = `
-                <span class="log-time">${timeStr}</span>
-                <span class="log-status">${statusText}</span>
-                <span class="log-message">${message}</span>
+
+            // Create new if not exists
+            if (!details) {
+                details = document.createElement('details');
+                details.className = 'log-entry';
+                if (entryId) details.id = entryId;
+                details.open = true; // Open new one by default
+
+                // Append to container immediately if new
+                logContainer.appendChild(details);
+            }
+
+            details.setAttribute('data-status', type); // Set status for later updates
+
+            const summary = document.createElement('summary');
+
+            // Status icon color
+            let iconColor = '#ddd';
+            if (type === 'running') iconColor = '#10b981';
+            if (type === 'completed') iconColor = '#3b82f6';
+            if (type === 'error') iconColor = '#ef4444';
+            if (type === 'info') iconColor = '#f59e0b';
+
+            // Icon display logic
+            let iconHtml = '';
+            if (iconClass === 'completed') {
+                // 完成状态显示对勾
+                iconHtml = `<span style="color: #4ade80; font-size: 16px; margin-right: 8px;">✓</span>`;
+            } else {
+                // 其他状态显示动态图标
+                iconHtml = `<span class="status-icon ${iconClass}"></span>`;
+            }
+
+            summary.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    ${iconHtml}
+                    <span>${title}</span>
+                </div>
+                <span style="font-size: 0.8em; color: #999;">${new Date().toLocaleTimeString()}</span>
             `;
-            
-            logContainer.appendChild(logEntry);
+
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'details-content markdown-body';
+            contentDiv.innerHTML = content;
+
+            // Clear existing content and re-append
+            details.innerHTML = '';
+            details.appendChild(summary);
+            details.appendChild(contentDiv);
+
+            // Auto-scroll only if new or at bottom
             logContainer.scrollTop = logContainer.scrollHeight;
         }
-        
+
+        function addSimpleLog(msg) {
+            const logContainer = document.getElementById('process-log');
+            const div = document.createElement('div');
+            div.style.padding = '10px';
+            div.style.color = '#666';
+            div.style.textAlign = 'center';
+            div.textContent = msg;
+            logContainer.appendChild(div);
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+
+        // Old addLogEntry for compatibility or simpler calls if needed (replaced by processLogEntry)
+        function addLogEntry(type, message) {
+            processLogEntry(type === 'error' ? 'Error' : 'Log', marked.parse(message), type);
+        }
+
         // 复制报告
         function copyReport() {
             const reportContent = document.getElementById('report-content').textContent;
@@ -553,6 +1168,130 @@
                     console.error('复制失败:', err);
                 });
         }
+
+        // 生成Todo List HTML
+        function generateTodoListHTML(croppedImgs) {
+            if (!croppedImgs || !Array.isArray(croppedImgs)) {
+                return '';
+            }
+
+            let html = `
+                <div class="todo-section" style="margin: 15px 0; padding: 15px; background: #f8f9fa; border-radius: 8px; border: 1px solid #e9ecef;">
+                    <h3 class="todo-title" style="font-size: 1.1em; margin-bottom: 15px; color: #333;">区域分析任务列表</h3>
+                    <ul class="todo-list">
+            `;
+
+            // 生成todo list项
+            croppedImgs.forEach((img, index) => {
+                const isDone = img.is_done || false;
+                const statusClass = isDone ? 'completed' : 'pending';
+                const statusText = isDone ? '已完成' : '待分析';
+                const todoClass = isDone ? 'todo-item done' : 'todo-item';
+
+                // If done and has analysis result, make it collapsible
+                if (isDone && img.analysis_result) {
+                    html += `
+                        <li style="list-style: none; margin-bottom: 10px;" data-index="${index}">
+                            <details class="todo-details">
+                                <summary class="todo-summary ${todoClass}" style="margin-bottom: 0;">
+                                    <input type="checkbox" class="todo-checkbox" checked disabled>
+                                    <span class="todo-text">${img.description || `区域 ${index + 1}`}</span>
+                                    <span class="todo-status ${statusClass}">${statusText}</span>
+                                </summary>
+                                <div class="todo-analysis-result">
+                                    <strong>分析结果：</strong><br>
+                                    ${img.analysis_result}
+                                </div>
+                            </details>
+                        </li>
+                    `;
+                } else {
+                    html += `
+                        <li class="${todoClass}" data-index="${index}">
+                            <input type="checkbox" class="todo-checkbox" ${isDone ? 'checked' : ''} disabled>
+                            <span class="todo-text">${img.description || `区域 ${index + 1}`}</span>
+                            <span class="todo-status ${statusClass}">${statusText}</span>
+                        </li>
+                    `;
+                }
+            });
+
+            html += `
+                    </ul>
+                </div>
+            `;
+
+            return html;
+        }
+
+        // 检查是否是内容分析格式的JSON
+        function isContentAnalysisFormat(obj) {
+            // 检查对象是否至少有一个以"part_"开头的键，且值是对象，包含items、location、description字段
+            if (typeof obj !== 'object' || obj === null) {
+                return false;
+            }
+            
+            const keys = Object.keys(obj);
+            if (keys.length === 0) {
+                return false;
+            }
+            
+            // 检查是否有至少一个key符合part_x的格式 (支持中文和英文)
+            const partKeys = keys.filter(key => /^(part_|部分_)\d+$/.test(key));
+            if (partKeys.length === 0) {
+                return false;
+            }
+            
+            // 检查第一个part_x对应的值是否包含所需的字段
+            const firstPart = obj[partKeys[0]];
+            return typeof firstPart === 'object' && 
+                   firstPart !== null && 
+                   'items' in firstPart && 
+                   'location' in firstPart && 
+                   'description' in firstPart;
+        }
+
+        // 解析内容分析JSON格式并生成HTML
+        function parseContentAnalysisJson(jsonObj) {
+            const keys = Object.keys(jsonObj);
+            const partKeys = keys.filter(key => /^(part_|部分_)\d+$/.test(key)).sort((a, b) => {
+                // 按数字排序part_x (支持中文和英文)
+                const numA = parseInt(a.split('_')[1]);
+                const numB = parseInt(b.split('_')[1]);
+                return numA - numB;
+            });
+
+            let html = '<div class="content-analysis-results" style="margin: 10px 0; padding: 15px; background: #f8fafc; border-left: 4px solid #3b82f6; border-radius: 0 4px 4px 0;">';
+            html += '<h3 style="margin-top: 0; color: #1e293b; font-size: 1.1em;">图像内容分析结果</h3>';
+            html += '<ul style="list-style: none; padding-left: 0;">';
+
+            partKeys.forEach(key => {
+                const part = jsonObj[key];
+                html += '<li style="margin: 12px 0; padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">';
+                html += `<strong>${part.items || key}:</strong> `;
+                html += `<span style="color: #64748b;">${part.description || '未提供描述'}</span>`;
+                
+                if (part.location && Array.isArray(part.location) && part.location.length === 4) {
+                    html += `<div style="font-size: 0.85em; color: #94a3b8; margin-top: 5px;">`;
+                    html += `坐标: [${part.location.join(', ')}]`;
+                    html += `</div>`;
+                }
+                
+                html += '</li>';
+            });
+
+            html += '</ul>';
+            html += '</div>';
+
+            return html;
+        }
+
+        // 更新Todo List
+        function updateTodoList() {
+            // 由于todo list是动态生成的，现在通过重新生成整个日志条目来更新
+            // 这个函数不再直接操作DOM，而是通过processStreamData重新生成日志
+        }
     </script>
 </body>
+
 </html>

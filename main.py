@@ -5,8 +5,8 @@ import utils.idgen as idgen
 from logger import logs
 from init import init
 from db.local_map import status_map
-from entity.agent_status import AgentStatus
 import json, os
+from entity.agent_status import AgentStatus
 
 app = FastAPI()
 
@@ -25,37 +25,300 @@ def render_index(request: Request):
 def read_root():
     return {"code": "200", "msg": "success"}
 
-@app.post("/api/task")
-async def analyze_task(file: UploadFile = File(...)):
+@app.get("/api/status/{task_id}")
+def get_task_status(task_id: str):
+    return {"status": status_map.get(task_id, AgentStatus.WAITING)}
+
+# 公共函数：读取文件并转换为base64
+async def _read_file_to_base64(file: UploadFile):
+    content = await file.read()
     import base64
-    import uuid
+    return base64.b64encode(content).decode('utf-8')
+
+# 公共函数：生成任务ID和记录日志
+def _init_task(agent_type: str):
+    task_id = idgen.generate_id()
+    logs.info(f"Received task {task_id}, starting analysis with {agent_type} agent...")
+    status_map[task_id] = AgentStatus.WAITING
+    return task_id
+
+# 标准agent处理函数
+def _run_standard_agent(img_base64: str, use_chinese: bool, task_id: str):
     from agent.graph import create_graph
     from langchain_core.messages import HumanMessage
+    graph = create_graph(task_id=task_id, img=img_base64, use_chinese=use_chinese)
+    inputs = {
+        "messages": [HumanMessage(content="Start analysis")]
+    }
+    result = graph.invoke(inputs)
+    
+    # 处理标准agent的报告
+    report = ""
+    if "report_messages" in result and result["report_messages"]:
+        report = result["report_messages"][-1].content
+    
+    return report
+
+# segment_agent处理函数
+def _run_segment_agent(img_base64: str, task_id: str, need_rag: bool = False):
+    from segment_agent.graph import create_graph
+    from PIL import Image
+    import io
+    import base64
+    
+    # 将base64解码为图片对象
+    img_bytes = base64.b64decode(img_base64)
+    img = Image.open(io.BytesIO(img_bytes))
+    graph = create_graph(task_id=task_id, img=img, need_rag=need_rag)
+    inputs = {}
+    result = graph.invoke(inputs)
+    
+    # 处理segment_agent的报告
+    report = ""
+    if "report" in result:
+        report = result["report"]
+    elif "final_report" in result:
+        report = result["final_report"]
+    
+    return report
+
+# 标准agent流式处理函数
+def _stream_standard_agent(img_base64: str, use_chinese: bool, task_id: str):
+    from agent.graph import create_graph
+    graph = create_graph(task_id=task_id, img=img_base64, use_chinese=use_chinese)
+    inputs = {}
+    
+    for event in graph.stream(inputs):
+        for node, state in event.items():
+            status = node
+            message = ""
+            
+            # standard agent的状态处理
+            if node == "img_content":
+                message = "Image content extracted"
+            elif node == "plan":
+                message = state.get("plan", "")
+            elif node == "tasks":
+                tasks = state.get("tasks", [])
+                message = f"Generated {len(tasks)} tasks"
+            elif node == "analysis":
+                msgs = state.get("analysis_messages", [])
+                if msgs:
+                    message = msgs[-1].content
+            elif node == "summary":
+                msgs = state.get("report_messages", [])
+                if msgs:
+                    message = msgs[-1].content
+            
+            total_tasks = len(state.get("tasks", [])) if "tasks" in state else 0
+            current_task = state.get("current_task", 0)
+            
+            yield json.dumps({
+                "status": status, 
+                "message": message,
+                "current_task": current_task,
+                "total_tasks": total_tasks
+            }, ensure_ascii=False) + "\n"
+    
+    yield json.dumps({"status": "finished", "message": "Analysis complete"}, ensure_ascii=False) + "\n"
+
+# segment_agent流式处理函数
+def _stream_segment_agent(img_base64: str, task_id: str, need_rag: bool = False):
+    from segment_agent.graph import create_graph
+    from PIL import Image
+    import io
+    import base64
+    
+    # 将base64解码为图片对象
+    img_bytes = base64.b64decode(img_base64)
+    img = Image.open(io.BytesIO(img_bytes))
+    graph = create_graph(task_id=task_id, img=img, need_rag=need_rag)
+    inputs = {}
+    
+    current_cropped_imgs = []
+    current_img_idx_val = 0
+    
+    for event in graph.stream(inputs, config={"recursion_limit": 50}):
+        for node, state in event.items():
+            status = node
+            message = ""
+            
+            # Update local tracking
+            if "cropped_imgs" in state:
+                current_cropped_imgs = state["cropped_imgs"]
+            if "current_img_idx" in state:
+                current_img_idx_val = state["current_img_idx"]
+            
+            # segment_agent的状态处理
+            if node == "rag_node":
+                message = "Querying and analyzing historical deepfake cases (RAG)"
+                # Show inference process (model reasoning)
+                if "rag_messages" in state and state["rag_messages"]:
+                    last_msg = state["rag_messages"][-1]
+                    if hasattr(last_msg, 'content'):
+                        content = last_msg.content
+                        if isinstance(content, str):
+                            message = f'<div style="font-size: 0.8em; color: #666;">{content}</div>'
+                yield json.dumps({
+                        "current_node": "知识库检索",
+                        "status": "rag_node",
+                        "message": message
+                    }, ensure_ascii=False) + "\n"
+                    
+            elif node == "rag_tool_call":
+                message = "Executing FAISS vector database search..."
+                yield json.dumps({
+                        "current_node": "知识库检索",
+                        "status": "rag_tool_call",
+                        "message": message
+                    }, ensure_ascii=False) + "\n"
+                    
+            elif node == "img_content":
+                # 先初始化前端展示状态
+                yield json.dumps({
+                        "current_node": "内容分析",
+                        "status": "img_content",
+                        "message": message
+                    }, ensure_ascii=False) + "\n"
+                message = "Extracting image content and identifying suspicious regions"
+                # Show inference process (model reasoning)
+                if "content_messages" in state and state["content_messages"]:
+                    last_msg = state["content_messages"][-1]
+                    if hasattr(last_msg, 'content'):
+                        content = last_msg.content
+                        if isinstance(content, str):
+                            # Use small text for inference process
+                            message = f'<div style="font-size: 0.8em; color: #666;">{content}</div>'
+                yield json.dumps({
+                        "current_node": "内容分析",
+                        "status": "img_content",
+                        "message": message
+                    }, ensure_ascii=False) + "\n"
+
+            elif node == "img_cropping":
+                message = "Segmenting image into parts for detailed analysis"
+                # 添加cropped_imgs到流式输出
+                if current_cropped_imgs:
+                    yield json.dumps({
+                        "current_node": "局部提取",
+                        "status": status, 
+                        "message": message,
+                        "cropped_imgs": current_cropped_imgs,
+                        "current_task": 0,
+                        "total_tasks": len(current_cropped_imgs)
+                    }, ensure_ascii=False) + "\n"
+                    continue
+            elif node == "img_part_analysis":
+                message = "Analyzing image part for deepfake indicators"
+                
+                # Try to get the actual analysis content
+                if "analysis_messages" in state and state["analysis_messages"]:
+                    msgs = state["analysis_messages"]
+                    if msgs:
+                        last_msg = msgs[-1]
+                        if hasattr(last_msg, 'content'):
+                            if isinstance(last_msg.content, str):
+                                message = last_msg.content
+                            elif isinstance(last_msg.content, list):
+                                for item in last_msg.content:
+                                    if isinstance(item, dict) and 'text' in item:
+                                        message = item['text']
+                                        break
+                
+                # Wrap in small text for inference process
+                if message and message != "Analyzing image part for deepfake indicators":
+                    message = f'<div style="font-size: 0.8em; color: #666;">{message}</div>'
+                
+                # 获取当前分析索引
+                total_imgs = len(current_cropped_imgs)
+                # 更新cropped_imgs状态
+                if current_cropped_imgs:
+                    yield json.dumps({
+                        "current_node": "图像区域分析",
+                        "status": status, 
+                        "message": message,
+                        "cropped_imgs": current_cropped_imgs,
+                        "current_task": current_img_idx_val + 1,
+                        "total_tasks": total_imgs
+                    }, ensure_ascii=False) + "\n"
+                    continue
+            elif node == "tool_call":
+                continue
+
+            elif node == "next_part":
+                continue
+                # finished_idx = current_img_idx_val - 1
+                # result_text = ""
+                # if 0 <= finished_idx < len(current_cropped_imgs):
+                #     is_done = current_cropped_imgs[finished_idx]["is_done"]
+                #     result_text = current_cropped_imgs[finished_idx]["analysis_result"]
+                #     if is_done:
+                #         message = f"Part {finished_idx + 1} analysis completed: {result_text}"
+                # else:
+                #     message = f"Part {finished_idx + 1} analysis failed"
+                
+                # yield json.dumps({
+                #     "current_node": "图像区域分析",
+                #     "status": "task_completed",
+                #     "message": message,
+                #     "is_done": is_done,
+                #     "current_task": finished_idx + 1,
+                #     "total_tasks": len(current_cropped_imgs),
+                #     "cropped_imgs": current_cropped_imgs
+                # }, ensure_ascii=False) + "\n"
+                
+            elif node == "report":
+                status = "summary" # Route to Analysis Report section
+                message = "Generating comprehensive deepfake detection report"
+                # Get report content
+                if "report" in state:
+                    message = state["report"]
+            elif node == "workflow_end":
+                yield json.dumps({
+                    "status": status, 
+                    "message": state["report"]
+                }, ensure_ascii=False) + "\n"
+            else:
+                # General handling for other nodes
+                if "analysis_messages" in state and state["analysis_messages"]:
+                    msgs = state["analysis_messages"]
+                    if msgs:
+                        last_msg = msgs[-1]
+                        if hasattr(last_msg, 'content'):
+                            if isinstance(last_msg.content, str):
+                                message = last_msg.content
+                            elif isinstance(last_msg.content, list):
+                                for item in last_msg.content:
+                                    if isinstance(item, dict) and 'text' in item:
+                                        message = item['text']
+                                        break
+            
+            total_tasks = len(state.get("tasks", [])) if "tasks" in state else 0
+            current_task = state.get("current_task", 0)
+            
+            yield json.dumps({
+                "status": status, 
+                "message": message,
+                "current_task": current_task,
+                "total_tasks": total_tasks
+            }, ensure_ascii=False) + "\n"
+    
+    yield json.dumps({"status": "finished", "message": "Analysis complete"}, ensure_ascii=False) + "\n"
+
+# 标准agent API端点
+@app.post("/api/task/standard")
+async def analyze_task_standard(file: UploadFile = File(...), use_chinese: bool = False):
     from fastapi.concurrency import run_in_threadpool
     
     # 读取图片并转换为base64
-    content = await file.read()
-    img_base64 = base64.b64encode(content).decode('utf-8')
+    img_base64 = await _read_file_to_base64(file)
     
-    task_id = idgen.generate_id()
-    logs.info(f"Received task {task_id}, starting analysis...")
-
-    status_map[task_id] = AgentStatus.WAITING
-
-    def _run_agent():
-        graph = create_graph(task_id=task_id, img=img_base64)
-        inputs = {
-            "messages": [HumanMessage(content="Start analysis")]
-        }
-        return graph.invoke(inputs)
+    # 初始化任务
+    task_id = _init_task("standard")
 
     try:
-        result = await run_in_threadpool(_run_agent)
+        report = await run_in_threadpool(_run_standard_agent, img_base64, use_chinese, task_id)
         
-        report = ""
-        if "report_messages" in result and result["report_messages"]:
-            report = result["report_messages"][-1].content
-            
         return {
             "code": 200, 
             "msg": "success", 
@@ -68,59 +331,65 @@ async def analyze_task(file: UploadFile = File(...)):
         logs.error(f"Task {task_id} failed: {str(e)}")
         return {"code": 500, "msg": str(e)}
 
-@app.get("/api/status/{task_id}")
-def get_task_status(task_id: str):
-    return {"status": status_map.get(task_id, AgentStatus.WAITING)}
-
-@app.post("/api/task/stream")
-async def analyze_task_stream(file: UploadFile = File(...)):
-    import base64
-    from agent.graph import create_graph
-    from langchain_core.messages import HumanMessage
+# segment_agent API端点
+@app.post("/api/task/segment")
+async def analyze_task_segment(file: UploadFile = File(...), need_rag: bool = False):
+    from fastapi.concurrency import run_in_threadpool
     
     # 读取图片并转换为base64
-    content = await file.read()
-    img_base64 = base64.b64encode(content).decode('utf-8')
+    img_base64 = await _read_file_to_base64(file)
     
-    task_id = idgen.generate_id()
-    logs.info(f"Received task {task_id}, starting streaming analysis...")
-    status_map[task_id] = AgentStatus.WAITING
+    # 初始化任务
+    task_id = _init_task("segment")
+
+    try:
+        report = await run_in_threadpool(_run_segment_agent, img_base64, task_id, need_rag)
+        
+        return {
+            "code": 200, 
+            "msg": "success", 
+            "data": {
+                "task_id": task_id,
+                "report": report
+            }
+        }
+    except Exception as e:
+        logs.error(f"Task {task_id} failed: {str(e)}")
+        return {"code": 500, "msg": str(e)}
+
+# 标准agent流式API端点
+@app.post("/api/task/stream/standard")
+async def analyze_task_stream_standard(file: UploadFile = File(...), use_chinese: bool = False):
+    # 读取图片并转换为base64
+    img_base64 = await _read_file_to_base64(file)
+    
+    # 初始化任务
+    task_id = _init_task("standard")
 
     def stream_generator():
-        # try:
-            graph = create_graph(task_id=task_id, img=img_base64)
-            inputs = {
-                "messages": [HumanMessage(content="Start analysis")]
-            }
-            
-            for event in graph.stream(inputs):
-                for node, state in event.items():
-                    status = node
-                    message = ""
-                    
-                    if node == "img_content":
-                        message = "Image content extracted"
-                    elif node == "plan":
-                        message = state.get("plan", "")
-                    elif node == "tasks":
-                        tasks = state.get("tasks", [])
-                        message = f"Generated {len(tasks)} tasks"
-                    elif node == "analysis":
-                        msgs = state.get("analysis_messages", [])
-                        if msgs:
-                            message = msgs[-1].content
-                    elif node == "summary":
-                        msgs = state.get("report_messages", [])
-                        if msgs:
-                            message = msgs[-1].content
-                    
-                    yield json.dumps({"status": status, "message": message}, ensure_ascii=False) + "\n"
-            
-            yield json.dumps({"status": "finished", "message": "Analysis complete"}, ensure_ascii=False) + "\n"
-            
-        # except Exception as e:
-        #     logs.error(f"Task {task_id} failed: {str(e)}")
-        #     yield json.dumps({"status": "error", "message": str(e)}, ensure_ascii=False) + "\n"
+        try:
+            yield from _stream_standard_agent(img_base64, use_chinese, task_id)
+        except Exception as e:
+            logs.error(f"Task {task_id} failed: {str(e)}")
+            yield json.dumps({"status": "error", "message": str(e)}, ensure_ascii=False) + "\n"
+
+    return StreamingResponse(stream_generator(), media_type="application/x-ndjson")
+
+# segment_agent流式API端点
+@app.post("/api/task/stream/segment")
+async def analyze_task_stream_segment(file: UploadFile = File(...), need_rag: bool = False):
+    # 读取图片并转换为base64
+    img_base64 = await _read_file_to_base64(file)
+    
+    # 初始化任务
+    task_id = _init_task("segment")
+
+    def stream_generator():
+        #try:
+            yield from _stream_segment_agent(img_base64, task_id, need_rag)
+        #except Exception as e:
+            #logs.error(f"Task {task_id} failed: {str(e)}")
+            #yield json.dumps({"status": "error", "message": str(e)}, ensure_ascii=False) + "\n"
 
     return StreamingResponse(stream_generator(), media_type="application/x-ndjson")
 
@@ -132,8 +401,15 @@ if __name__ == "__main__":
             os.makedirs(path)
     check_necessary_dir("agent/plan/docs")
     check_necessary_dir("agent/summary/docs")
+    # 为segment_agent创建必要的文件夹
+    check_necessary_dir("segment_agent/plan/docs")
+    check_necessary_dir("segment_agent/summary/docs")
+
+    # 数据分析agent
+    from reflection_agent.main import main as start_reflection_agent
+    start_reflection_agent()
 
     import uvicorn
-    logs.info("Start deepfakeagentdemo! You can access it at http://0.0.0.0:8000")
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    logs.info("Start deepfakeagentdemo! You can access it at http://localhost:8000")
+    uvicorn.run(app, host="localhost", port=8000)
     

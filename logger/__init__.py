@@ -24,18 +24,15 @@ class ContextFilter(logging.Filter):
 
 # 创建控制台处理器
 console_handler = logging.StreamHandler()
-console_handler.setLevel(logging.INFO)
+console_handler.setLevel(logging.DEBUG)
 
 class CustomFormatter(logging.Formatter):
     def format(self, record):
-        if record.levelno >= logging.ERROR:
-            self._style._fmt = '%(asctime)s - [%(log_id)s] - %(name)s - %(levelname)s - %(filename)s:%(lineno)d - %(message)s'
-        else:
-            self._style._fmt = '%(asctime)s - [%(log_id)s] - %(name)s - %(levelname)s - %(message)s'
+        self._style._fmt = '%(asctime)s - [%(log_id)s] - %(name)s - %(levelname)s - %(filename)s:%(lineno)d - %(message)s'
         return super().format(record)
 
 # 创建日志格式
-formatter = CustomFormatter('%(asctime)s - [%(log_id)s] - %(name)s - %(levelname)s - %(message)s')
+formatter = CustomFormatter('%(asctime)s - [%(log_id)s] - %(name)s - %(levelname)s - %(filename)s:%(lineno)d - %(message)s')
 console_handler.setFormatter(formatter)
 
 # 添加过滤器
