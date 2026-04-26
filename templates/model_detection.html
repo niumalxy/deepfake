@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>深度伪造图像模型检测 - Deepfake Detection</title>
+    <!-- Modern Typography -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --danger: #ef4444;
+            --success: #10b981;
+            --background: #0f172a;
+            --surface: rgba(30, 41, 59, 0.7);
+            --text-main: #f8fafc;
+            --text-secondary: #94a3b8;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--background) 0%, #1e1b4b 100%);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px 20px;
+        }
+
+        /* Nav */
+        .nav-container {
+            width: 100%;
+            max-width: 800px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: flex-start;
+        }
+
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 30px;
+            color: var(--text-main);
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateX(-5px);
+        }
+
+        /* Glassmorphism Container */
+        .glass-panel {
+            background: var(--surface);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            padding: 40px;
+            width: 100%;
+            max-width: 800px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            background: linear-gradient(to right, #818cf8, #c084fc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header p {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+        }
+
+        /* Form Elements */
+        .control-group {
+            margin-bottom: 30px;
+        }
+
+        .control-group label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 500;
+            color: #cbd5e1;
+        }
+
+        select {
+            width: 100%;
+            padding: 15px;
+            border-radius: 12px;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            font-size: 1rem;
+            outline: none;
+            transition: all 0.3s;
+            cursor: pointer;
+            appearance: none;
+        }
+
+        select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.3);
+        }
+
+        select option {
+            background: #1e293b;
+            color: white;
+            padding: 10px;
+        }
+
+        /* Upload Area */
+        .upload-area {
+            border: 2px dashed rgba(255, 255, 255, 0.2);
+            border-radius: 16px;
+            padding: 50px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        .upload-area:hover,
+        .upload-area.dragover {
+            border-color: var(--primary);
+            background: rgba(79, 70, 229, 0.1);
+        }
+
+        .upload-area input[type="file"] {
+            display: none;
+        }
+
+        .upload-icon {
+            font-size: 40px;
+            margin-bottom: 15px;
+            color: var(--primary);
+        }
+
+        .upload-text {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+        }
+
+        #file-name {
+            margin-top: 15px;
+            font-weight: 500;
+            color: #818cf8;
+        }
+
+        #preview-image {
+            max-width: 100%;
+            max-height: 250px;
+            margin-top: 20px;
+            border-radius: 12px;
+            display: none;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Submit Button */
+        .btn-submit {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, var(--primary) 0%, #7c3aed 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 20px;
+            box-shadow: 0 10px 20px -10px rgba(124, 58, 237, 0.5);
+        }
+
+        .btn-submit:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 25px -10px rgba(124, 58, 237, 0.7);
+        }
+
+        .btn-submit:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Result Area */
+        .result-area {
+            margin-top: 30px;
+            border-radius: 16px;
+            padding: 30px;
+            text-align: center;
+            display: none;
+            animation: slideUp 0.5s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .result-fake {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .result-real {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .result-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .result-fake .result-title {
+            color: #fca5a5;
+        }
+
+        .result-real .result-title {
+            color: #6ee7b7;
+        }
+
+        /* Loader */
+        .loader {
+            display: none;
+            width: 48px;
+            height: 48px;
+            border: 5px solid #FFF;
+            border-bottom-color: var(--primary);
+            border-radius: 50%;
+            display: inline-block;
+            box-sizing: border-box;
+            animation: rotation 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        .loader-container {
+            text-align: center;
+            display: none;
+            margin-top: 20px;
+        }
+
+        @keyframes rotation {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="nav-container">
+        <a href="/" class="back-btn">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px;">
+                <line x1="19" y1="12" x2="5" y2="12"></line>
+                <polyline points="12 19 5 12 12 5"></polyline>
+            </svg>
+            返回Agent分析
+        </a>
+    </div>
+
+    <div class="glass-panel">
+        <div class="header">
+            <h1>深度伪造图像模型检测</h1>
+            <p>选择专用检测模型进行真实性验证</p>
+        </div>
+
+        <div class="control-group">
+            <label for="model-select">选择检测模型</label>
+            <div style="position: relative;">
+                <select id="model-select">
+                    <option value="" disabled selected>正在加载模型列表...</option>
+                </select>
+                <!-- Custom arrow for select -->
+                <div
+                    style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); pointer-events: none;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M6 9l6 6 6-6" />
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <div class="control-group">
+            <label>上传检测图像</label>
+            <div class="upload-area" id="upload-area" onclick="document.getElementById('file-input').click()">
+                <input type="file" id="file-input" accept="image/*">
+                <div class="upload-icon">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                        <circle cx="8.5" cy="8.5" r="1.5" />
+                        <polyline points="21 15 16 10 5 21" />
+                    </svg>
+                </div>
+                <div class="upload-text">点击或拖拽图片到此处上传</div>
+                <div id="file-name"></div>
+                <img id="preview-image" src="" alt="Preview">
+            </div>
+        </div>
+
+        <button class="btn-submit" id="btn-submit" disabled>开始检测</button>
+
+        <div class="loader-container" id="loader-container">
+            <div class="loader"></div>
+            <p style="margin-top: 15px; color: #94a3b8;">正在执行模型预测，请稍候...</p>
+        </div>
+
+        <div class="result-area" id="result-area">
+            <div class="result-title" id="result-title"></div>
+            <p id="result-desc" style="color: #cbd5e1; margin-top: 5px;"></p>
+        </div>
+
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Setup DOM Elements
+            const uploadArea = document.getElementById('upload-area');
+            const fileInput = document.getElementById('file-input');
+            const fileNameDisplay = document.getElementById('file-name');
+            const previewImage = document.getElementById('preview-image');
+            const btnSubmit = document.getElementById('btn-submit');
+            const modelSelect = document.getElementById('model-select');
+
+            // 1. Fetch available models
+            try {
+                const response = await fetch('/api/models');
+                const data = await response.json();
+
+                modelSelect.innerHTML = ''; // clear loading state
+
+                if (data.code === 200 && data.data.length > 0) {
+                    data.data.forEach(model => {
+                        const option = document.createElement('option');
+                        option.value = model;
+                        option.textContent = model;
+                        modelSelect.appendChild(option);
+                    });
+                    checkFormReady();
+                } else {
+                    modelSelect.innerHTML = '<option disabled selected>未找到可用模型</option>';
+                }
+            } catch (error) {
+                console.error("Error fetching models:", error);
+                modelSelect.innerHTML = '<option disabled selected>加载模型失败</option>';
+            }
+
+            // 2. Setup Drag and Drop / File Input
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                uploadArea.addEventListener(eventName, preventDefaults, false);
+            });
+
+            function preventDefaults(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+
+            ['dragenter', 'dragover'].forEach(eventName => {
+                uploadArea.addEventListener(eventName, () => {
+                    uploadArea.classList.add('dragover');
+                }, false);
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                uploadArea.addEventListener(eventName, () => {
+                    uploadArea.classList.remove('dragover');
+                }, false);
+            });
+
+            uploadArea.addEventListener('drop', (e) => {
+                let dt = e.dataTransfer;
+                let files = dt.files;
+                if (files.length > 0) {
+                    handleFileTokens(files[0]);
+                }
+            }, false);
+
+            fileInput.addEventListener('change', function () {
+                if (this.files.length > 0) {
+                    handleFileTokens(this.files[0]);
+                }
+            });
+
+            function handleFileTokens(file) {
+                if (!file.type.startsWith('image/')) {
+                    alert("请上传图片文件！");
+                    return;
+                }
+
+                // Set file to input if came from drop
+                const dataTransfer = new DataTransfer();
+                dataTransfer.items.add(file);
+                fileInput.files = dataTransfer.files;
+
+                fileNameDisplay.textContent = file.name;
+
+                // Preview Image
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onloadend = function () {
+                    previewImage.src = reader.result;
+                    previewImage.style.display = 'inline-block';
+                    document.querySelector('.upload-icon').style.display = 'none';
+                    document.querySelector('.upload-text').style.display = 'none';
+                }
+
+                checkFormReady();
+            }
+
+            // 3. Form Readiness
+            modelSelect.addEventListener('change', checkFormReady);
+
+            function checkFormReady() {
+                if (fileInput.files.length > 0 && modelSelect.value) {
+                    btnSubmit.disabled = false;
+                } else {
+                    btnSubmit.disabled = true;
+                }
+            }
+
+            // 4. Submit Detection
+            btnSubmit.addEventListener('click', async () => {
+                const file = fileInput.files[0];
+                const modelName = modelSelect.value;
+
+                if (!file || !modelName) return;
+
+                const formData = new FormData();
+                formData.append('file', file);
+                formData.append('model_name', modelName);
+
+                // UI transition to loading state
+                btnSubmit.style.display = 'none';
+                document.getElementById('result-area').style.display = 'none';
+                document.getElementById('loader-container').style.display = 'block';
+
+                try {
+                    const response = await fetch('/api/detection/predict', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    const result = await response.json();
+
+                    document.getElementById('loader-container').style.display = 'none';
+                    btnSubmit.style.display = 'block';
+
+                    if (result.code === 200) {
+                        showResult(result.data.is_fake);
+                    } else {
+                        alert("检测失败: " + result.msg);
+                    }
+
+                } catch (error) {
+                    console.error("检测请求出错", error);
+                    alert("网络错误，检测请求失败");
+                    document.getElementById('loader-container').style.display = 'none';
+                    btnSubmit.style.display = 'block';
+                }
+            });
+
+            function showResult(isFake) {
+                const resultArea = document.getElementById('result-area');
+                const resultTitle = document.getElementById('result-title');
+                const resultDesc = document.getElementById('result-desc');
+
+                resultArea.style.display = 'block';
+
+                // Clear existing classes
+                resultArea.className = 'result-area';
+
+                if (isFake) {
+                    resultArea.classList.add('result-fake');
+                    resultTitle.textContent = "⚠ 警告：检测为伪造图像 (Fake)";
+                    resultTitle.style.color = "#fca5a5";
+                    resultDesc.textContent = "模型分析出该图片存在深度伪造特征。";
+                } else {
+                    resultArea.classList.add('result-real');
+                    resultTitle.textContent = "✓ 验证通过：检测为真实图像 (Real)";
+                    resultTitle.style.color = "#6ee7b7";
+                    resultDesc.textContent = "模型未发现明显的深度伪造痕迹。";
+                }
+            }
+        });
+    </script>
+</body>
+
+</html>

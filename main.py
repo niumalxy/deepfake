@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Request, File, UploadFile
+from fastapi import FastAPI, Request, File, UploadFile, Form
 from fastapi.responses import StreamingResponse
 from fastapi.templating import Jinja2Templates
 import utils.idgen as idgen
@@ -393,6 +393,64 @@ async def analyze_task_stream_segment(file: UploadFile = File(...), need_rag: bo
 
     return StreamingResponse(stream_generator(), media_type="application/x-ndjson")
 
+
+"""
+    模型检测页面接口
+"""
+
+@app.get("/model_detection")
+def render_model_detection(request: Request):
+    return templates.TemplateResponse("model_detection.html", {"request": request})
+
+@app.get("/api/models")
+def get_available_models():
+    models_dir = "detection_models"
+    if not os.path.exists(models_dir):
+        return {"code": 200, "data": []}
+    
+    models = []
+    for item in os.listdir(models_dir):
+        if os.path.isdir(os.path.join(models_dir, item)):
+            models.append(item)
+    logs.info(f"get models:{models}")
+    return {"code": 200, "data": models}
+
+@app.post("/api/detection/predict")
+async def detection_predict(file: UploadFile = File(...), model_name: str = Form(...)):
+
+    import importlib.util
+    from PIL import Image
+    import io
+    
+    try:
+        content = await file.read()
+        img = Image.open(io.BytesIO(content))
+        
+        # Load module dynamically
+        model_dir = os.path.join("detection_models", model_name)
+        main_py_path = os.path.join(model_dir, "src", "main.py")
+        
+        if not os.path.exists(main_py_path):
+            return {"code": 404, "msg": f"Model {model_name} main.py not found"}
+            
+        spec = importlib.util.spec_from_file_location(f"model_{model_name}", main_py_path)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        
+        # Run predict
+        is_fake = module.predict(img)
+        
+        return {
+            "code": 200, 
+            "msg": "success", 
+            "data": {
+                "is_fake": is_fake
+            }
+        }
+    except Exception as e:
+        logs.error(f"Prediction failed for model {model_name}: {str(e)}")
+        return {"code": 500, "msg": str(e)}
+
 if __name__ == "__main__":
     # 检查必要文件夹是否存在
     def check_necessary_dir(path):
@@ -405,9 +463,10 @@ if __name__ == "__main__":
     check_necessary_dir("segment_agent/plan/docs")
     check_necessary_dir("segment_agent/summary/docs")
 
-    # 数据分析agent
+    # 数据分析agent，异步启动
     from reflection_agent.main import main as start_reflection_agent
-    start_reflection_agent()
+    import threading
+    threading.Thread(target=start_reflection_agent, daemon=True).start()
 
     import uvicorn
     logs.info("Start deepfakeagentdemo! You can access it at http://localhost:8000")
