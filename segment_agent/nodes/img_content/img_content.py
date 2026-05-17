@@ -13,16 +13,19 @@ from segment_agent.graph.state import CroppingImg
 
 def extract_suspicious_regions(state: AgentState, config: Dict[str, Any]):
     """
-    提取图像中可能为伪造的区域
+    从整幅图像中筛选出可疑的不自然区域，供下游检测模块进一步分析。
+    
+    本函数的角色是"预筛选"——识别图像中所有看起来可疑、不符合自然规律、
+    可能存在伪造痕迹的区域，而非对这些区域做出最终的真伪判定。
     
     Args:
         state: AgentState，包含origin_img等信息
         config: 配置字典，包含task_id等配置信息
     
     Returns:
-        Dict[str, Any]: 更新后的state字段
+        Dict[str, Any]: 更新后的state字段，包含cropping_imgs（可疑区域列表）
     """
-    logs.info("--- Extracting Suspicious Regions ---")
+    logs.info("--- Screening Suspicious Regions ---")
     
     origin_img = state.get('origin_img')
     if origin_img is None:
@@ -79,7 +82,7 @@ def extract_suspicious_regions(state: AgentState, config: Dict[str, Any]):
                 ))
                 logs.info(f"Extracted region: {items}, location: {location}, description: {description}")
         
-        logs.info(f"Total suspicious regions extracted: {len(cropping_imgs)}")
+        logs.info(f"Total suspicious regions screened: {len(cropping_imgs)}")
         
     except json.JSONDecodeError as e:
         logs.error(f"Failed to parse JSON response: {e}")

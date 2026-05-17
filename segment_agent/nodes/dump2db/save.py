@@ -6,10 +6,13 @@ from utils.img_convert import img_to_base64
 from mq.reflection_produce import reflection_produce
 from entity.dump_type import DumpType
 from entity.segment_agent_status import AgentStatus
-from utils.img_embedding import img_embedder
 from segment_agent.rag.faiss_db import faiss_manager
 import asyncio
 from logger import logs
+
+def _get_img_embedder():
+    from utils.img_embedding import img_embedder
+    return img_embedder
 
 # 保存分析结果到数据库
 def dump2db(state: AgentState, config: SegmentAgentConfig) -> None:
@@ -27,10 +30,14 @@ def dump2db(state: AgentState, config: SegmentAgentConfig) -> None:
     # 总是将图像向量插入 FAISS 用于 RAG
     if state.get("origin_img"):
         try:
-            emb = img_embedder.get_embedding(state["origin_img"])
+            emb = _get_img_embedder().get_embedding(state["origin_img"])
             faiss_manager.insert_vector(emb, config["task_id"])
         except Exception as e:
             logs.error(f"Failed to insert image embedding to FAISS for task {config['task_id']}: {e}")
+
+    if config.get("skip_dump"):
+        logs.info(f"skip_dump=True for task {config['task_id']}, skipping MongoDB + MQ dump.")
+        return
 
     # 如果结果正确，或状态为INVALID，暂时不分析
     if config["label"] is None or ((state["prediction"] == "fake") ^ (config["label"][0] == 0)) or state["status"] == AgentStatus.INVALID:

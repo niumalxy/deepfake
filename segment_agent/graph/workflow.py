@@ -5,7 +5,7 @@ from segment_agent.nodes.img_content.img_content import extract_suspicious_regio
 from segment_agent.nodes.img_segment.img_segment import crop_image_by_coords
 from segment_agent.nodes.img_part_analysis.img_part_analysis import analyze_partial_image
 from segment_agent.nodes.next_part.next_part import next_part
-from segment_agent.skills.tool_call import execute_tool_call
+from segment_agent.nodes.tool_call.tool_call import tool_call as execute_tool_call
 from segment_agent.nodes.report.report import report
 from segment_agent.nodes.dump2db.save import dump2db
 from entity.segment_agent_status import AgentStatus
@@ -77,19 +77,16 @@ def have_next_part(state: AgentState) -> str:
         return "no"
     return "yes"
 
-def create_graph(task_id: str, img: Image.Image, use_chinese: bool = True, label: Optional[tuple[int, str]] = None): # label取值为tuple, (int, str), 代表(类别, 描述)
+def create_graph(task_id: str, img: Image.Image, use_chinese: bool = True, label: Optional[tuple[int, str]] = None, skip_dump: bool = False):
     """
-    创建segment_agent的工作流图
-    
     Args:
         task_id: 任务ID
         img: 原始图像
         use_chinese: 是否使用中文
-    
-    Returns:
-        编译后的工作流图
+        label: (int, str) 标签
+        skip_dump: True时跳过MongoDB写入和MQ生产（批量反射检测用）
     """
-    config = SegmentAgentConfig(task_id=task_id, use_chinese=use_chinese, label=label)
+    config = SegmentAgentConfig(task_id=task_id, use_chinese=use_chinese, label=label, skip_dump=skip_dump)
     workflow = StateGraph(AgentState)
 
     # 添加节点

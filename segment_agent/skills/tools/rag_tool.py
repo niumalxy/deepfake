@@ -1,7 +1,6 @@
 from typing import Dict, Any, List
 from langchain_core.tools import tool
 from segment_agent.rag.faiss_db import faiss_manager
-from utils.img_embedding import img_embedder
 from db.mongodb import get_analysis_by_task_id
 from logger import logs
 
@@ -33,7 +32,7 @@ def get_rag_tool(origin_img_placeholder) -> Any:
         logs.info(f"Agent requested {k} similar images from FAISS...")
         
         try:
-            # 1. Get embedding of current image
+            from utils.img_embedding import img_embedder
             emb = img_embedder.get_embedding(origin_img_placeholder)
             
             # 2. Search in FAISS

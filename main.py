@@ -69,7 +69,7 @@ def _run_segment_agent(img_base64: str, task_id: str, need_rag: bool = False):
     # 将base64解码为图片对象
     img_bytes = base64.b64decode(img_base64)
     img = Image.open(io.BytesIO(img_bytes))
-    graph = create_graph(task_id=task_id, img=img, need_rag=need_rag)
+    graph = create_graph(task_id=task_id, img=img)
     inputs = {}
     result = graph.invoke(inputs)
     
@@ -123,7 +123,7 @@ def _stream_standard_agent(img_base64: str, use_chinese: bool, task_id: str):
     yield json.dumps({"status": "finished", "message": "Analysis complete"}, ensure_ascii=False) + "\n"
 
 # segment_agent流式处理函数
-def _stream_segment_agent(img_base64: str, task_id: str, need_rag: bool = False):
+def _stream_segment_agent(img_base64: str, task_id: str):
     from segment_agent.graph import create_graph
     from PIL import Image
     import io
@@ -132,7 +132,7 @@ def _stream_segment_agent(img_base64: str, task_id: str, need_rag: bool = False)
     # 将base64解码为图片对象
     img_bytes = base64.b64decode(img_base64)
     img = Image.open(io.BytesIO(img_bytes))
-    graph = create_graph(task_id=task_id, img=img, need_rag=need_rag)
+    graph = create_graph(task_id=task_id, img=img)
     inputs = {}
     
     current_cropped_imgs = []
@@ -452,6 +452,11 @@ async def detection_predict(file: UploadFile = File(...), model_name: str = Form
         return {"code": 500, "msg": str(e)}
 
 if __name__ == "__main__":
+    import argparse
+    parser = argparse.ArgumentParser(description="Deepfake Detection App")
+    parser.add_argument("--start_reflection", action="store_true", help="Start the reflection agent")
+    args = parser.parse_args()
+
     # 检查必要文件夹是否存在
     def check_necessary_dir(path):
         if not os.path.exists(path):
@@ -464,9 +469,10 @@ if __name__ == "__main__":
     check_necessary_dir("segment_agent/summary/docs")
 
     # 数据分析agent，异步启动
-    from reflection_agent.main import main as start_reflection_agent
-    import threading
-    threading.Thread(target=start_reflection_agent, daemon=True).start()
+    if args.start_reflection:
+        from reflection_agent.main import main as start_reflection_agent
+        import threading
+        threading.Thread(target=start_reflection_agent, daemon=True).start()
 
     import uvicorn
     logs.info("Start deepfakeagentdemo! You can access it at http://localhost:8000")
