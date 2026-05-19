@@ -32,6 +32,10 @@ def analyze_partial_image(state: AgentState, config: Dict[str, Any]) -> Dict[str
     current_img = cropped_imgs[current_idx]
     logs.info(f"Analyzing image {current_idx + 1}/{len(cropped_imgs)}: {current_img['save_path']}")
 
+    iter_count = state.get('analysis_iter_count', 0)
+    new_iter = iter_count + 1
+    logs.info(f"analysis iter for region {current_idx}: {new_iter}")
+
     logs.info(f"history: {len(state.get('analysis_messages', []))}")
     try:
         img_base64 = img_path_to_base64(current_img['save_path'])
@@ -67,25 +71,35 @@ def analyze_partial_image(state: AgentState, config: Dict[str, Any]) -> Dict[str
             SystemMessage(content=prompt),
             HumanMessage(content=origin_img_content),
             HumanMessage(content=content),
-        ]  if not analysis_messages else analysis_messages
-        
+        ]  if not analysis_messages else list(analysis_messages)
+
+        if new_iter == 2:
+            messages.append(SystemMessage(content=(
+                "警告：你上一轮已使用过一次输出机会但未给出收尾。"
+                "本轮必须立即输出完整的 <region_verdict>...</region_verdict> 块并以 <complete> 结尾，"
+                "不要再单独写 <thinking>，不要再发起 tool_call。"
+            )))
+            logs.warning(f"injected last-chance warning for region {current_idx} at iter {new_iter}")
+
         # 绑定工具到模型，使模型知道可以使用哪些工具
         bound_model = model.bind_tools(TOOLS_SCHEMA)
         response = bound_model.invoke(messages)
         logs.info("模型输出: " + response.content)
         return {
             "analysis_messages": messages + [response],
+            "analysis_iter_count": new_iter,
         }
-        
+
     except Exception as e:
         logs.error(f"Error analyzing image {current_idx + 1}: {e}")
         cropped_imgs[current_idx]['is_done'] = True
         cropped_imgs[current_idx]['analysis_result'] = f"Error: {str(e)}"
-        
+
         next_idx = current_idx + 1
 
         return {
             "cropped_imgs": cropped_imgs,
             "current_analysis_idx": next_idx,
             "tool_call_times": 0,
+            "analysis_iter_count": new_iter,
         }

@@ -1,19 +1,33 @@
-import os
+import yaml
 from openai import OpenAI
 
-client = OpenAI(
-    api_key="sk-02cf148004ad470bb4249988363d8940",
-    base_url="https://api.deepseek.com")
+CONF_PATH = "chat_model/conf/conf.yml"
+MODEL_KEY = "gpt-5.4"
+
+with open(CONF_PATH, "r", encoding="utf-8") as f:
+    conf = yaml.safe_load(f)[MODEL_KEY]
+
+print(f"[INFO] Using model conf: {MODEL_KEY}")
+print(f"[INFO] api_base = {conf['api_base']}")
+print(f"[INFO] model    = {conf['model']}")
+
+client_kwargs = {
+    "api_key": conf["api_key"],
+    "base_url": conf["api_base"],
+}
+if conf.get("user_agent"):
+    client_kwargs["default_headers"] = {"User-Agent": conf["user_agent"]}
+
+client = OpenAI(**client_kwargs)
 
 response = client.chat.completions.create(
-    model="deepseek-v4-pro",
+    model=conf["model"],
     messages=[
         {"role": "system", "content": "You are a helpful assistant"},
-        {"role": "user", "content": "Hello"},
+        {"role": "user", "content": "Hello, please introduce yourself in one sentence."},
     ],
     stream=False,
-    reasoning_effort="high",
-    extra_body={"thinking": {"type": "enabled"}}
 )
 
+print("\n[RESPONSE]")
 print(response.choices[0].message.content)

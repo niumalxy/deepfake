@@ -1,0 +1,58 @@
+{
+  "summary": {
+    "split": "validation",
+    "num_per_class": 3,
+    "seed": 7,
+    "total_samples": 5,
+    "evaluated": 5,
+    "errors": 0,
+    "confusion_matrix": {
+      "TP": 2,
+      "FP": 0,
+      "FN": 0,
+      "TN": 3
+    },
+    "metrics": {
+      "accuracy": 1.0,
+      "precision": 1.0,
+      "recall": 1.0
+    }
+  },
+  "samples": [
+    {
+      "task_id": "val_be778223",
+      "true_label": "fake",
+      "predicted": "fake",
+      "correct": true,
+      "description": "[tampered#0]  Type: {part tampered}  Areas:\n<tampered position> The tampering is concentrated on the face of the person in the image, centered vertically and slightly to the left horizontally.\nTampered Content:\n<Types of objects or parts> The face of a man\nVisual Inconsistencies:\n<lighting> The shad"
+    },
+    {
+      "task_id": "val_1b4707c2",
+      "true_label": "normal",
+      "predicted": "normal",
+      "correct": true,
+      "description": "[real#0]  Type: real\nConsistency:\n<lighting>The patterns of sunlight and shadows in the image are consistent with a single natural light source from the left side\n<edges>Pixel examination reveals that the edges around people and objects are soft and natural without signs of tampering\n<resolution>The"
+    },
+    {
+      "task_id": "val_e09915dc",
+      "true_label": "fake",
+      "predicted": "fake",
+      "correct": true,
+      "description": "[full_synthetic#0]  Type: synthetic\nConsistency:\n<lighting>The lighting on the locomotive and the castle features an overly dramatic and somewhat inconsistent portrayal with exaggerated intensity and angles.\n<edges>The edges of the steam locomotive and the castle are too sharp and well-defined lacki"
+    },
+    {
+      "task_id": "val_d5771a64",
+      "true_label": "normal",
+      "predicted": "normal",
+      "correct": true,
+      "description": "[real#1]  Type: real\nConsistency:\n<lighting>The sunlight in the image is consistent and matches the natural light source direction and intensity expected in an urban daylight setting.\n<edges>The edges and pixels of the image are smooth and natural with no signs of tampering evident.\n<resolution>The "
+    },
+    {
+      "task_id": "val_f3ec7fca",
+      "true_label": "normal",
+      "predicted": "normal",
+      "correct": true,
+      "description": "[real#2]  Type: real\nConsistency:\n<lighting>The lighting and color interplay is consistent throughout the scene indicating uniform light source positioning.\n<edges>The edges and pixel distribution in the image are smooth with natural transitions and no signs of manipulation.\n<resolution>The resoluti"
+    }
+  ]
+}

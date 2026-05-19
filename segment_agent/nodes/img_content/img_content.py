@@ -60,7 +60,9 @@ def extract_suspicious_regions(state: AgentState, config: Dict[str, Any]):
     
     try:
         json_str = response.content.strip()
-        
+
+        json_str = re.sub(r"<thinking>.*?</thinking>", "", json_str, flags=re.DOTALL | re.IGNORECASE)
+
         json_match = re.search(r'\{[\s\S]*\}', json_str)
         if json_match:
             json_str = json_match.group()
@@ -72,15 +74,17 @@ def extract_suspicious_regions(state: AgentState, config: Dict[str, Any]):
                 location = part_value.get('location', (0, 0, 0, 0))
                 description = part_value.get('description', '')
                 items = part_value.get('items', '')
+                anomaly_type = part_value.get('anomaly_type', 'other')
 
                 cropping_imgs.append(CroppingImg(
                     items=items,
                     top_left=location[:2],
                     bottom_right=location[2:],
                     description=description,
-                    save_path=""
+                    save_path="",
+                    anomaly_type=anomaly_type,
                 ))
-                logs.info(f"Extracted region: {items}, location: {location}, description: {description}")
+                logs.info(f"Extracted region: {items}, type: {anomaly_type}, location: {location}, description: {description}")
         
         logs.info(f"Total suspicious regions screened: {len(cropping_imgs)}")
         

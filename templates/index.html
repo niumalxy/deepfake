@@ -698,6 +698,7 @@
         // 全局变量
         let selectedFile = null;
         let isUploading = false;
+        const streamBuffers = {};
 
         // 初始化事件监听
         document.addEventListener('DOMContentLoaded', function () {
@@ -833,6 +834,66 @@
         // 处理流式数据
         function processStreamData(data) {
             const { status, message, current_task, total_tasks, cropped_imgs, current_node } = data;
+
+            // Token 级流式：优先在所有"收尾/折叠"逻辑之前处理，避免每个 token 都关折叠
+            if (status === 'stream_delta') {
+                const node = data.node;
+                const key = node === 'img_part_analysis'
+                    ? `task-${data.current_task || 1}`
+                    : 'report-stream';
+                let buf = streamBuffers[key];
+                if (!buf) {
+                    buf = streamBuffers[key] = { text: '', rafPending: false, node: node };
+                    if (node === 'img_part_analysis') {
+                        processLogEntry(
+                            `区域分析 (任务 ${data.current_task || 1}/${data.total_tasks || '?'})`,
+                            '', 'running', 'ring', key
+                        );
+                    } else {
+                        processLogEntry('生成分析报告', '', 'running', 'ring', key);
+                    }
+                }
+                buf.text += (data.delta || '');
+                if (!buf.rafPending) {
+                    buf.rafPending = true;
+                    requestAnimationFrame(() => {
+                        const entry = document.getElementById(key);
+                        if (entry) {
+                            const contentDiv = entry.querySelector('.details-content');
+                            if (contentDiv) {
+                                try {
+                                    contentDiv.innerHTML = marked.parse(buf.text);
+                                } catch (e) {
+                                    contentDiv.textContent = buf.text;
+                                }
+                            }
+                        }
+                        if (buf.node === 'report') {
+                            const rc = document.getElementById('report-content');
+                            if (rc) {
+                                try {
+                                    rc.innerHTML = marked.parse(buf.text);
+                                } catch (e) {
+                                    rc.textContent = buf.text;
+                                }
+                                rc.className = 'markdown-body';
+                            }
+                        }
+                        buf.rafPending = false;
+                    });
+                }
+                const logC = document.getElementById('process-log');
+                if (logC) logC.scrollTop = logC.scrollHeight;
+                return;
+            }
+            if (status === 'stream_end') {
+                const node = data.node;
+                const key = node === 'img_part_analysis'
+                    ? `task-${data.current_task || 1}`
+                    : 'report-stream';
+                delete streamBuffers[key];
+                return;
+            }
 
             // Mark previous running task as completed
             const runningTask = document.querySelector('#process-log .log-entry[data-status="running"]');

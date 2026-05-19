@@ -1,0 +1,58 @@
+{
+  "summary": {
+    "split": "validation",
+    "num_per_class": 3,
+    "seed": 99,
+    "total_samples": 5,
+    "evaluated": 5,
+    "errors": 0,
+    "confusion_matrix": {
+      "TP": 1,
+      "FP": 0,
+      "FN": 1,
+      "TN": 3
+    },
+    "metrics": {
+      "accuracy": 0.8,
+      "precision": 1.0,
+      "recall": 0.5
+    }
+  },
+  "samples": [
+    {
+      "task_id": "val_172f46b3",
+      "true_label": "normal",
+      "predicted": "normal",
+      "correct": true,
+      "description": "[real#1]  Type: real\nConsistency:\n<lighting>The lighting and color tones in the image are consistent and natural with appropriate shadows indicating the light source from the front-left.\n<edges>The edges and pixels around the man and the podium are smooth and natural with uniform pixel distribution "
+    },
+    {
+      "task_id": "val_a9f97e30",
+      "true_label": "normal",
+      "predicted": "normal",
+      "correct": true,
+      "description": "[real#2]  Type: real\nConsistency:\n<lighting>The lighting and color across the image are consistent and natural as indicated by the clarity and soft shadows from sunlight.\n<edges>The edges are smooth and coherent without any signs of jaggedness or pixel distortions.\n<resolution>The resolution is unif"
+    },
+    {
+      "task_id": "val_e47b0142",
+      "true_label": "normal",
+      "predicted": "normal",
+      "correct": true,
+      "description": "[real#0]  Type: real\nConsistency:\n<lighting>The lighting in the image is soft and diffused consistent with a central room light or nearby lamp.\n<edges>The edges around objects are smooth and continuous with no irregular pixel arrangement indicating authenticity.\n<resolution>The image exhibits unifor"
+    },
+    {
+      "task_id": "val_a2baa6e0",
+      "true_label": "fake",
+      "predicted": "normal",
+      "correct": false,
+      "description": "[tampered#0]  Type: part fake  Areas:\n<tampered position> In the lower center of the image, covering a significant portion of the foreground, a pair of feet pointing towards a television screen.\nTampered Content:\n<Types of objects or parts> Human body part, specifically a pair of feet wearing shoes\n"
+    },
+    {
+      "task_id": "val_ddd45cae",
+      "true_label": "fake",
+      "predicted": "fake",
+      "correct": true,
+      "description": "[full_synthetic#0]  Type: synthetic\nConsistency:\n<lighting>The lighting throughout the scene is unnaturally uniform lacking the natural gradations and variation expected in an outdoor setting.\n<edges>The edges of the characters particularly around the fox and cat are suspiciously smooth with an almo"
+    }
+  ]
+}

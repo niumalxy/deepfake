@@ -18,12 +18,23 @@ from entity.segment_agent_config import SegmentAgentConfig
 
 def should_continue_analysis(state: AgentState) -> str:
     last_message = state["analysis_messages"][-1]
+    content = getattr(last_message, 'content', '')
+
+    if "<complete>" in content:
+        return "complete"
+
+    iter_count = state.get('analysis_iter_count', 0)
+    if iter_count >= 3:
+        from logger import logs
+        logs.warning(
+            f"analysis_iter_count={iter_count} reached hard cap, force-routing to next_part "
+            f"(verdict will fall back to Uncertain)"
+        )
+        return "complete"
+
     # 检查最后一条消息是否包含工具调用
     if hasattr(last_message, 'tool_calls') and last_message.tool_calls:
         return "tool_call"
-    content = getattr(last_message, 'content', '')
-    if "<complete>" in content:
-        return "complete"
     return "continue"
 
 

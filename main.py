@@ -138,7 +138,25 @@ def _stream_segment_agent(img_base64: str, task_id: str):
     current_cropped_imgs = []
     current_img_idx_val = 0
     
-    for event in graph.stream(inputs, config={"recursion_limit": 50}):
+    for mode, payload in graph.stream(inputs, config={"recursion_limit": 50}, stream_mode=["updates", "custom"]):
+        if mode == "custom":
+            if payload.get("kind") == "stream_delta":
+                yield json.dumps({
+                    "status": "stream_delta",
+                    "node": payload["node"],
+                    "delta": payload["delta"],
+                    "current_task": payload.get("current_task", 0),
+                    "total_tasks": len(current_cropped_imgs),
+                }, ensure_ascii=False) + "\n"
+            elif payload.get("kind") == "stream_end":
+                yield json.dumps({
+                    "status": "stream_end",
+                    "node": payload["node"],
+                    "current_task": payload.get("current_task", 0),
+                    "total_tasks": len(current_cropped_imgs),
+                }, ensure_ascii=False) + "\n"
+            continue
+        event = payload
         for node, state in event.items():
             status = node
             message = ""
@@ -386,7 +404,7 @@ async def analyze_task_stream_segment(file: UploadFile = File(...), need_rag: bo
 
     def stream_generator():
         #try:
-            yield from _stream_segment_agent(img_base64, task_id, need_rag)
+            yield from _stream_segment_agent(img_base64, task_id)
         #except Exception as e:
             #logs.error(f"Task {task_id} failed: {str(e)}")
             #yield json.dumps({"status": "error", "message": str(e)}, ensure_ascii=False) + "\n"

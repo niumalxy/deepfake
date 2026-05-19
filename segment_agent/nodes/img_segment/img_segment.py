@@ -36,41 +36,49 @@ def crop_image_by_coords(state: AgentState, config: dict):
         x2, y2 = item.get('bottom_right', (0, 0))
         items = item.get('items', '')
         description = item.get('description', '')
+        anomaly_type = item.get('anomaly_type', 'other')
 
         # 获取图像尺寸
         width, height = origin_img.size
-        
+
         # 坐标规范化：确保 x1 < x2, y1 < y2
         x1, x2 = min(x1, x2), max(x1, x2)
         y1, y2 = min(y1, y2), max(y1, y2)
-        
+
         # 边界检查与修正
         x1 = max(0, min(x1, width))
         y1 = max(0, min(y1, height))
         x2 = max(0, min(x2, width))
         y2 = max(0, min(y2, height))
-        
+
         # 检查有效性：如果裁剪区域为空（宽度或高度为0），则跳过或使用默认处理
         if x2 <= x1 or y2 <= y1:
             logs.warning(f"Invalid crop area for item {idx}: ({x1}, {y1}, {x2}, {y2}). Skipping.")
             continue
-            
+
         box = (x1, y1, x2, y2)
         img = origin_img.crop(box)
-        
+
         if img.mode == "RGBA":
             img = img.convert("RGB")
-        
+
         save_path = os.path.join(origin_save_path, f"{task_id}_{idx}.jpg")
         img.save(save_path)
-        
+
         # 创建CroppedImg对象
         cropped_img = CroppedImg(
             save_path=save_path,
             items=items,
             description=description,
             is_done=False,
-            analysis_result=""
+            analysis_result="",
+            verdict="",
+            confidence=0,
+            strong_count=0,
+            weak_count=0,
+            anomaly_type=anomaly_type,
+            top_left=(x1, y1),
+            bottom_right=(x2, y2),
         )
         cropped_imgs.append(cropped_img)
     

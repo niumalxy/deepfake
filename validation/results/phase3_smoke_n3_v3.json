@@ -1,0 +1,58 @@
+{
+  "summary": {
+    "split": "validation",
+    "num_per_class": 3,
+    "seed": 42,
+    "total_samples": 5,
+    "evaluated": 5,
+    "errors": 0,
+    "confusion_matrix": {
+      "TP": 0,
+      "FP": 0,
+      "FN": 2,
+      "TN": 3
+    },
+    "metrics": {
+      "accuracy": 0.6,
+      "precision": 0.0,
+      "recall": 0.0
+    }
+  },
+  "samples": [
+    {
+      "task_id": "val_0b6a5fb2",
+      "true_label": "fake",
+      "predicted": "normal",
+      "correct": false,
+      "description": "[full_synthetic#0]  Type: synthetic\nConsistency:\n<lighting>The lighting in the image shows inconsistency particularly noticeable around the shadows which do not align with the diffused light source.\n<edges>The edges of horses and human figures are overly smooth lacking natural variations like hair s"
+    },
+    {
+      "task_id": "val_d724280e",
+      "true_label": "normal",
+      "predicted": "normal",
+      "correct": true,
+      "description": "[real#1]  Type: real\nConsistency:\n<lighting>The lighting across the tortoises is consistent with a single overhead natural light source evidenced by natural shadows and highlights.\n<edges>The edges of each tortoise and the ground are smooth and continuous with no signs of digital tampering.\n<resolut"
+    },
+    {
+      "task_id": "val_e92e4822",
+      "true_label": "normal",
+      "predicted": "normal",
+      "correct": true,
+      "description": "[real#2]  Type: real\nConsistency:\n<lighting>The lighting is natural sunlight enhancing the skin tones and clothing colors appropriately.\n<edges>The edges around subjects and objects are smooth with uniform pixel resolution indicative of an authentic image.\n<resolution>The high resolution across the "
+    },
+    {
+      "task_id": "val_9a3a66d1",
+      "true_label": "fake",
+      "predicted": "normal",
+      "correct": false,
+      "description": "[tampered#0]  Type: {part tampered}  Areas:\n<tampered position> On the metal bar extending from a brick wall supporting the \"NELSON STREET\" sign, located in the upper half of the image, centered horizontally but slightly to the left.\nTampered Content:\n<Types of objects or parts> The metal bar which "
+    },
+    {
+      "task_id": "val_126b7404",
+      "true_label": "normal",
+      "predicted": "normal",
+      "correct": true,
+      "description": "[real#0]  Type: real\nConsistency:\n<lighting>The photograph's lighting is natural enhancing the golden tones of the sculpture against the night sky with consistent light direction and intensity.\n<edges>The edges and pixels around the sculpture are smooth without any signs of tampering indicating a na"
+    }
+  ]
+}

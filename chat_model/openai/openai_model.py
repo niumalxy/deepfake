@@ -7,14 +7,21 @@ from agent.tools.registry import TOOLS_SCHEMA, TOOLS_MAPPING
 class ChatModel:
     def __init__(self):
         model_conf = get_model_conf()
-        self.client = OpenAI(
-            api_key=model_conf["api_key"],
-            base_url=model_conf["api_base"]
-        )
+        client_kwargs = {
+            "api_key": model_conf["api_key"],
+            "base_url": model_conf["api_base"],
+        }
+        # 仅当 conf 中显式配置 user_agent 时才覆盖 (用于绕过中转网关 UA 拦截)
+        if model_conf.get("user_agent"):
+            client_kwargs["default_headers"] = {"User-Agent": model_conf["user_agent"]}
+        self.client = OpenAI(**client_kwargs)
         self.model_name = model_conf.get("model", model_conf.get("model_name"))
         self.max_tokens = model_conf["max_tokens"]
         self.tools = TOOLS_SCHEMA
         self.tools_mapping = TOOLS_MAPPING
+        self.extra_body = {}
+        if "enable_thinking" in model_conf:
+            self.extra_body["enable_thinking"] = model_conf["enable_thinking"]
 
     def generate(self, messages: list, tools: Optional[List] = None, tool_choice: Optional[str] = None) -> Union[str, Any]:
         params = {
@@ -22,6 +29,8 @@ class ChatModel:
             "messages": messages,
             "max_tokens": self.max_tokens,
         }
+        if self.extra_body:
+            params["extra_body"] = self.extra_body
         
         current_tools = tools if tools is not None else self.tools
         if current_tools:
